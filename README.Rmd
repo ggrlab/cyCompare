@@ -67,3 +67,23 @@ usethis::proj_activate("/home/gugl/clonedgit/ggrlab/cyCompare")
 usethis::use_tidy_style(strict = TRUE)
 usethis::use_git()
 ```
+
+
+``usethis`` tells you to envoke further github-related commands. 
+There is two ways to continue: 
+1. Create a personal access token (PAT) and use it to authenticate with github
+2. Manually push the package to github 
+
+Pushing manually works fine, but some advanced ``usethis`` commands won't work properly, 
+therefore I will continue with the PAT.
+
+```{r, eval = FALSE}
+#
+usethis::create_github_token() # if done already, use "github token, ggrlab, PAT" password
+gitcreds::gitcreds_set() # Then enter the freshly generated token
+usethis::use_github(
+    organisation = "ggrlab",
+    private = TRUE,
+    visibility = "private"
+)
+```
