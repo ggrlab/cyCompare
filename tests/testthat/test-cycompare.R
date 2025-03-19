@@ -7,7 +7,7 @@ test_that("CyCompare Badalona samples", {
         File = ff_files_panel
     ) |>
         dplyr::mutate(
-            Device = sub("/.*", "", File),
+            Device = basename(dirname(dirname(File))),
             # You could have multiple SAMPLES for each SUPERSAMPLE
             SuperSample = rep(paste0("Donor_", c(1:3)), 2),
             Sample = rep(paste0("Sample_", c(1:3)), 2)
