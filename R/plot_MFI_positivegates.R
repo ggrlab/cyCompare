@@ -6,7 +6,7 @@
 #' @param dt_count_mfi A `data.table` containing MFI values with columns: `File`, `pop`, `MFI`, `Time`, and `Device`.
 #' @param marker_to_gate A named list mapping markers to their respective gating populations.
 #' @param device_colors A named vector specifying custom colors for devices (e.g., `c("Device1" = "red", "Device2" = "blue")`).
-#' @param transformlist An optional named list of transformation functions for each marker (e.g., `list("CD3" = log10, "CD4" = sqrt)`).
+#' @param transformlist An optional named list of transformation functions for each marker (e.g., `list("CD3" = log10, "CD4" = sqrt)`). If a single value or function is provided, it will be applied to all markers.
 #'
 #' @return A `ggplot2` object visualizing the transformed MFI over time for each marker.
 #' @export
@@ -40,8 +40,14 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
     dt_medians_relevant <- dt_medians[marker == variable]
 
     # Apply transformation functions to MFI values (if provided)
-    if (length(transformlist) == 1) {
-        transformlist <- rep(list(transformlist), length(unique(dt_medians_relevant$marker)))
+    if (length(transformlist) == 1 && !is.null(transformlist)) {
+        if (is.function(transformlist)) {
+            transformlist <- list(transformlist)
+        }
+        transformlist <- setNames(
+            rep(transformlist, length(unique(dt_medians_relevant$marker))),
+            unique(dt_medians_relevant$marker)
+        )
     }
     for (unique_marker in unique(dt_medians_relevant$marker)) {
         tryCatch(
