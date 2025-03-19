@@ -72,7 +72,7 @@ test_that("CyCompare Badalona samples", {
 
     cycompare(
         flowframes = ff_list_downsampled,
-        ff_columns_relevant = relevant_mn,
+        ff_columns_relevant = names(relevant_mn),
         df = df,
         outcome_columns_df = c("outcome_1", "outcome_2"),
         outcome_models = list("glmnet" = glmnet::cv.glmnet),
