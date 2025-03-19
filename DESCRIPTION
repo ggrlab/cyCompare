@@ -15,4 +15,7 @@ RoxygenNote: 7.3.1
 URL: https://github.com/ggrlab/cyCompare
 BugReports: https://github.com/ggrlab/cyCompare/issues
 Imports: 
-    data.table
+    cytobench,
+    data.table,
+    flowCore,
+    flowWorkspace

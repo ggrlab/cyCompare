@@ -15,4 +15,15 @@ cycompare <- function(
 
 
     #### Gate each sample to the primary gate
+    gated_ff <- sapply(
+        names(flowframes),
+        simplify = FALSE,
+        function(x) {
+            gate_flowframe(
+                ff = flowframes[[x]],
+                gating = gatingsets[[x]],
+                gatename = gatename_primary
+            )
+        }
+    )
 }
