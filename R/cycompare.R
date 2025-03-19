@@ -65,7 +65,8 @@ cycompare <- function(
     )
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
 
-    plot_densities(
+    # 2. Density plots
+    p2.2 <- plot_densities(
         ff_gated = lapply(gated_ff, function(x) x[, ff_columns_relevant]),
         df = df,
         device_colors = device_colors,
@@ -73,4 +74,9 @@ cycompare <- function(
             asinh(x / 1e3)
         }
     )
+
+    # 3. OTD
+
+    # 4 Clustering with FlowSOM
+    browser()
 }

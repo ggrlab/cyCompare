@@ -1,3 +1,16 @@
+#' Plot Density Distributions for Gated Flow Cytometry Data
+#'
+#' This function generates density plots for multiple flow cytometry markers across different devices and samples.
+#'
+#' @param ff_gated A list of `flowFrame` objects containing gated flow cytometry data.
+#' @param df A `data.table` containing metadata with at least the columns `"File"`, `"Device"`, and `"Sample"`.
+#' @param device_colors An optional named vector of colors for each device to use in the plot.
+#' @param transformlist A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.
+#' @param density_n An integer specifying the number of points used to estimate density (default: 500).
+#'
+#' @return A `ggplot2` object showing the density distributions of markers across samples and devices.
+#'
+#' @export
 plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500) {
     relevant_columns <- flowCore::colnames(ff_gated[[1]])
 
