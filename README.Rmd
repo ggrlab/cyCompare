@@ -6,10 +6,10 @@ output: github_document
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+    collapse = TRUE,
+    comment = "#>",
+    fig.path = "man/figures/README-",
+    out.width = "100%"
 )
 ```
 
@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN status](https://www.r-pkg.org/badges/version/cyCompare)](https://CRAN.R-project.org/package=cyCompare)
+[![R-CMD-check](https://github.com/ggrlab/cyCompare/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ggrlab/cyCompare/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of cyCompare is to ...
@@ -86,4 +87,68 @@ usethis::use_github(
     private = TRUE,
     visibility = "private"
 )
+```
+
+
+```{r, eval = FALSE}
+usethis::use_tidy_github()
+# # 2023-10-23: Do NOT use github action checks as it cannot cope with git lfs,
+# # therefore always fails. - Unsolved 2024-05-22
+usethis::use_github_action("check-standard")
+# usethis::use_tidy_github_labels()
+usethis::use_pkgdown_github_pages() # Disallowed  by github for private: "GitHub API error (422):Your current plan does not support GitHub Pages for this repository."
+```
+
+
+Additional information: 
+```{r, eval = FALSE}
+usethis::use_author(
+    given = "Gunther",
+    family = "Glehr",
+    email = "gunthergl@gmx.net",
+    role = c("aut", "cre"),
+    comment = c("ORCID" = "0000-0002-1495-9162")
+)
+usethis::use_news_md()
+lintr::use_lintr(type = "tidyverse")
+# Change file .lintr manually to:
+# linters: linters_with_defaults(line_length_linter = line_length_linter(120),indentation_linter = indentation_linter(4)) # see vignette("lintr")
+# encoding: "UTF-8"
+```
+precommit is a wonderful tool to check your code before committing it. 
+
+```{r, eval = FALSE}
+# https://lorenzwalthert.github.io/precommit/articles/precommit.html
+# install.packages("precommit")
+# install.packages("reticulate")
+# bash::$ conda deactivate
+# bash::$ pip3 install pre-commit
+precommit::install_precommit()
+precommit::use_precommit()
+## Use pre-commit-config.yaml from restrictedROC
+```
+Before committing: ``pre-commit install --hook-type pre-push``, then commit. 
+
+Used packages:
+```{r, eval = FALSE}
+usethis::use_data_table()
+# usethis::use_package("devtools")
+# usethis::use_package("lifecycle")
+precommit::snippet_generate("additional-deps-roxygenize")
+```
+
+Packages used within the data-raw scripts:
+```{r, eval = FALSE}
+# usethis::use_package("dplyr", type = "Suggests")
+# usethis::use_package("tibble", type = "Suggests")
+# usethis::use_package("qs", type = "Suggests")
+# usethis::use_package("usethis", type = "Suggests")
+# usethis::use_package("readxl", type = "Suggests")
+# usethis::use_package("pacman", type = "Suggests")
+# usethis::use_package("stringr", type = "Suggests")
+# usethis::use_package("gridExtra", type = "Suggests")
+# usethis::use_package("sva", type = "Suggests")
+# usethis::use_package("caret", type = "Suggests")
+# usethis::use_package("data.table", type = "Suggests")
+# usethis::use_package("TreeSummarizedExperiment", type = "Suggests")
 ```
