@@ -53,6 +53,12 @@ cycompare <- function(
     # Plots of counts and percentages
     p1.2_3 <- plot_counts(counts_joint, gatename_primary, device_colors)
 
-
+    #### Figure 2 plots
+    # 1. Positive population MFI
+    plot_MFI_positivegates(
+        dt_count_mfi = counts_joint,
+        marker_to_gate = marker_to_gate
+    )
+    browser()
     gated_ff <- lapply(gated_ff, function(x) x[["ff_gated"]])
 }
