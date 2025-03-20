@@ -6,9 +6,14 @@ Config
 cre
 cyCompare
 cytobench
+cytometry
+Cytometry
 envoke
 flowCore
+FlowSOM
 flowWorkspace
+ggfortify
+ggplot
 ggrlab
 github
 Glehr
@@ -16,6 +21,7 @@ gmx
 gunthergl
 https
 Lifecycle
+MFI
 mozilla
 oducible
 ORCID

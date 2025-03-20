@@ -18,17 +18,6 @@
 #'   \item{plots_pca}{A list of PCA plots for each clustering result, colored by device.}
 #'   \item{p_MA}{A list of MA plots comparing cluster proportions between devices.}
 #'
-#' @import data.table
-#' @import ggplot2
-#' @import ggpubr
-#' @import ggh4x
-#' @importFrom FlowSOM FlowSOM
-#' @importFrom cytobench flowSOM_predict
-#' @importFrom flowCore transform transformList colnames flowSet
-#' @importFrom stats prcomp
-#' @importFrom ggfortify autoplot
-#' @importFrom dplyr select left_join
-#' @importFrom tidyr pivot_longer pivot_wider
 #' @export
 #'
 #' @examples
