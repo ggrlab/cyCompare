@@ -23,7 +23,8 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
     # Filter dt_count_mfi to keep only relevant gating populations
     dt_count_mfi_relevant <- dt_count_mfi[pop %in% relevant_gates]
     if (!nrow(dt_count_mfi_relevant) == length(relevant_gates) * length(unique(dt_count_mfi[, File]))) {
-        warning("Not all relevant gates are present in the MFI data.")
+        missing_gates <- setdiff(relevant_gates, unique(dt_count_mfi_relevant$pop))
+        warning("Not all relevant gates are present in the MFI data: \n  ", paste0(missing_gates, collapse = "  \n"))
     }
 
     # Merge the filtered MFI data with marker-to-gate mappings using 'pop' as the key
@@ -79,6 +80,11 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
     }
     p0 <- p0 + ggplot2::geom_point() + # Scatter plot of data points
         ggpubr::theme_pubr() + # Clean publication-ready theme
+        ggplot2::theme(
+            # remove y axis lines
+            axis.line.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank()
+        ) +
         ggplot2::geom_smooth(formula = y ~ x, method = "loess", se = TRUE, alpha = .2) + # Smoothed trend with confidence interval
         ggplot2::xlab("Time") # X-axis label
 

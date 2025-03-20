@@ -49,6 +49,11 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         ggh4x::facet_grid2(Sample ~ variable, scales = "free_y", independent = "y") +
         # ggh4x::facet_grid2(Sample~variable, scales = "free",independent = "x") +
         ggpubr::theme_pubr() +
+        ggplot2::theme(
+            # remove axis lines
+            axis.line.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank()
+        ) +
         ggplot2::ylab("Density") +
         ggplot2::xlab("Transformed MFI") +
         ggplot2::theme(

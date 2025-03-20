@@ -40,7 +40,7 @@ plot_counts <- function(dt_counts, populations = NULL, device_colors = NULL) {
                 ggplot2::aes(x = Time, y = !!ggplot2::sym(x), col = Device, fill = Device)
             ) +
                 ggplot2::geom_point() + # Scatter plot of data points
-                ggpubr::theme_pubr() + # Clean publication-ready theme
+                ggpubr::theme_pubclean() + # Clean theme
                 ggplot2::facet_wrap(~pop, scales = "free_y") + # Facet by population
                 # Linear regression with confidence interval
                 ggplot2::geom_smooth(method = "loess", se = TRUE, alpha = .2)
