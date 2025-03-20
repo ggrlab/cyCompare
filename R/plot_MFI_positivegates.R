@@ -45,7 +45,7 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
         marker_mean <- dt_medians_relevant[, .(mean_mfi = mean(mfi_all_gates)), by = .(marker)]
         dt_medians_relevant_meanratio <- dt_medians_relevant[marker_mean, on = "marker"][, mfi_by_meanMFI := (mfi_all_gates / mean_mfi)]
         p0 <- ggplot2::ggplot(
-            dt_medians_relevant_meanratio, ggplot2::aes(x = Time, y = mfi_by_meanMFI, color = Device)
+            dt_medians_relevant_meanratio, ggplot2::aes(x = Time, y = mfi_by_meanMFI, color = Device, fill = Device)
         ) +
             ggplot2::ylab("Ratio MFI to meanMFI") + # Y-axis label
             ggplot2::facet_wrap(~marker) + # Facet by marker, NO free scales
@@ -72,13 +72,13 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
             )
         }
         p0 <- ggplot2::ggplot(
-            dt_medians_relevant, ggplot2::aes(x = Time, y = mfi_all_gates, color = Device)
+            dt_medians_relevant, ggplot2::aes(x = Time, y = mfi_all_gates, color = Device, fill = Device)
         ) +
             ggplot2::facet_wrap(~marker, scales = "free_y") + # Facet by marker
             ggplot2::ylab("Transformed MFI") # Y-axis label
     }
     p0 <- p0 + ggplot2::geom_point() + # Scatter plot of data points
-        ggpubr::theme_pubclean() + # Clean publication-ready theme
+        ggpubr::theme_pubr() + # Clean publication-ready theme
         ggplot2::geom_smooth(formula = y ~ x, method = "loess", se = TRUE, alpha = .2) + # Smoothed trend with confidence interval
         ggplot2::xlab("Time") # X-axis label
 

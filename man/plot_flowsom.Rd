@@ -7,7 +7,7 @@
 plot_flowsom(
   ff_gated,
   df,
-  device_colors,
+  device_colors = NULL,
   transformlist,
   nClus = 5,
   scale = FALSE,
