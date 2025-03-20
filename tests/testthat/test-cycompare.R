@@ -28,7 +28,8 @@ test_that("CyCompare Badalona samples", {
     ### Actual testing of cycompare
     ff_list <- ff_files_panel |> sapply(flowCore::read.FCS, simplify = FALSE)
     ff_list_downsampled <- lapply(ff_list, function(x) {
-        x[sample(nrow(x), 1e3), ]
+        # x[sample(nrow(x), 1e3), ]
+        x
     })
     flowCore::flowSet(ff_list_downsampled)
 
@@ -50,22 +51,22 @@ test_that("CyCompare Badalona samples", {
         "CD45RA-FITC-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7-"),
         "CCR7-PE-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7+"),
         "CD28-ECD-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD27+CD28+",
-            "/Singlets/CD45+/CD3+/CD8+/CD27+CD28+"
+            "/Singlets/CD45+/CD3+/CD27+CD28+",
+            "/Singlets/CD45+/CD3+/CD27+CD28+"
         ),
-        "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD4+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD8+/CD57-PD1+"),
+        "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD57-PD1+"),
         "CD27-PC7-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD27+CD28+",
-            "/Singlets/CD45+/CD3+/CD8+/CD27+CD28+"
+            "/Singlets/CD45+/CD3+/CD27+CD28+",
+            "/Singlets/CD45+/CD3+/CD27+CD28+"
         ),
         "CD4-APC-A" = "/Singlets/CD45+/CD3+/CD4+",
         "CD8-AF700-A" = "/Singlets/CD45+/CD3+/CD8+",
         "CD3-AA750-A" = "/Singlets/CD45+/CD3+",
         "CD57-PB-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD57+PD1+",
-            "/Singlets/CD45+/CD3+/CD4+/CD57+PD1-",
-            "/Singlets/CD45+/CD3+/CD8+/CD57+PD1+",
-            "/Singlets/CD45+/CD3+/CD8+/CD57+PD1-"
+            "/Singlets/CD45+/CD3+/CD57+PD1+",
+            "/Singlets/CD45+/CD3+/CD57+PD1-",
+            "/Singlets/CD45+/CD3+/CD57+PD1+",
+            "/Singlets/CD45+/CD3+/CD57+PD1-"
         ),
         "CD45-KrO-A" = c("/Singlets/CD45+")
     )
@@ -74,6 +75,7 @@ test_that("CyCompare Badalona samples", {
         flowframes = ff_list_downsampled,
         ff_columns_relevant = names(relevant_mn),
         df = df,
+        max_events_postgate = 1e4,
         outcome_columns_df = c("outcome_1", "outcome_2"),
         outcome_models = list("glmnet" = glmnet::cv.glmnet),
         gatingsets = gslist,

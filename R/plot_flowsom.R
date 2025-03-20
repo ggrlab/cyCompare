@@ -139,7 +139,6 @@ plot_flowsom <- function(ff_gated,
         # Generate all pairwise comparisons of devices
         device_combinations <- combn(names(device_colors), 2)
         plotlist <- list()
-
         for (combination_i in seq_len(ncol(device_combinations))) {
             device_combination <- device_combinations[, combination_i]
             d1 <- device_combination[1]
@@ -191,6 +190,7 @@ plot_flowsom <- function(ff_gated,
                 ) +
                 ggplot2::scale_fill_viridis_c(na.value = NA)
         }
+        return(plotlist)
     })
 
     # Return both PCA and MA plots as a list

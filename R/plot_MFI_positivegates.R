@@ -28,7 +28,7 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
     }
 
     # Merge the filtered MFI data with marker-to-gate mappings using 'pop' as the key
-    dt <- marker_to_gate_dt[dt_count_mfi_relevant, on = "pop"]
+    dt <- marker_to_gate_dt[dt_count_mfi_relevant, on = "pop", allow.cartesian = TRUE]
 
     # Convert MFI data to long format for plotting
     dt_long <- data.table::melt(
@@ -46,11 +46,12 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
         marker_mean <- dt_medians_relevant[, .(mean_mfi = mean(mfi_all_gates)), by = .(marker)]
         dt_medians_relevant_meanratio <- dt_medians_relevant[marker_mean, on = "marker"][, mfi_by_meanMFI := (mfi_all_gates / mean_mfi)]
         p0 <- ggplot2::ggplot(
-            dt_medians_relevant_meanratio, ggplot2::aes(x = Time, y = mfi_by_meanMFI, color = Device, fill = Device)
+            dt_medians_relevant_meanratio, ggplot2::aes(x = Time, y = (mfi_by_meanMFI), color = Device, fill = Device)
         ) +
             ggplot2::ylab("Ratio MFI to meanMFI") + # Y-axis label
             ggplot2::facet_wrap(~marker) + # Facet by marker, NO free scales
-            ggplot2::geom_hline(yintercept = 1, linetype = "dashed")
+            ggplot2::geom_hline(yintercept = (1), linetype = "dashed") +
+            ggplot2::scale_y_log10()
     } else {
         # Apply transformation functions to MFI values (if provided)
         if (length(transformlist) == 1 && !is.null(transformlist)) {

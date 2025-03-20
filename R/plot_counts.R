@@ -43,7 +43,7 @@ plot_counts <- function(dt_counts, populations = NULL, device_colors = NULL) {
                 ggpubr::theme_pubclean() + # Clean theme
                 ggplot2::facet_wrap(~pop, scales = "free_y") + # Facet by population
                 # Linear regression with confidence interval
-                ggplot2::geom_smooth(method = "loess", se = TRUE, alpha = .2)
+                ggplot2::geom_smooth(formula = y ~ x, method = "loess", se = TRUE, alpha = .2)
             if (!all(is.null(device_colors))) {
                 p0 <- p0 +
                     ggplot2::scale_color_manual(values = device_colors) + # Custom device colors for lines
