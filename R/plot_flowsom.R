@@ -39,7 +39,7 @@
 #'
 plot_flowsom <- function(ff_gated,
                          df,
-                         device_colors,
+                         device_colors = NULL,
                          transformlist,
                          nClus = 5,
                          scale = FALSE,
@@ -88,7 +88,7 @@ plot_flowsom <- function(ff_gated,
         res_pca <- stats::prcomp(x_data |> dplyr::select(-sample), scale = TRUE)
 
         # Generate PCA plot using ggfortify
-        ggfortify:::autoplot.prcomp(
+        p0 <- ggfortify:::autoplot.prcomp(
             res_pca,
             data = df,
             colour = "Device"
@@ -99,6 +99,13 @@ plot_flowsom <- function(ff_gated,
                 title = "PCA of FlowSOM",
                 subtitle = x
             )
+
+
+        # Apply custom device colors if provided
+        if (!all(is.null(device_colors))) {
+            p0 <- p0 +
+                ggplot2::scale_color_manual(values = device_colors)
+        }
     })
 
     ## Generate MA plots to compare cluster proportions between devices
