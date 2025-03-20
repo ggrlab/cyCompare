@@ -47,30 +47,30 @@ test_that("CyCompare Badalona samples", {
 
     relevant_mn <- flowCore::flowSet(ff_list_downsampled) |> flowCore::markernames()
     marker_to_gate <- list(
-        "CD45RA-FITC-A" = c("/Singlets/CD45+/CD3+/A++", "/Singlets/CD45+/CD3+/A+-"),
-        "CCR7-PE-A" = c("/Singlets/CD45+/CD3+/A++"),
+        "CD45RA-FITC-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7-"),
+        "CCR7-PE-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7+"),
         "CD28-ECD-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD4+ CD27+ CD28+",
-            "/Singlets/CD45+/CD3+/CD8+/CD8+ CD27+ CD28+"
+            "/Singlets/CD45+/CD3+/CD4+/CD27+CD28+",
+            "/Singlets/CD45+/CD3+/CD8+/CD27+CD28+"
         ),
-        "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD4+/CD4+ CD57- PD1+", "/Singlets/CD45+/CD3+/CD8+/CD8+ CD57- PD1+"),
+        "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD4+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD8+/CD57-PD1+"),
         "CD27-PC7-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD4+ CD27+ CD28+",
-            "/Singlets/CD45+/CD3+/CD8+/CD8+ CD27+ CD28+"
+            "/Singlets/CD45+/CD3+/CD4+/CD27+CD28+",
+            "/Singlets/CD45+/CD3+/CD8+/CD27+CD28+"
         ),
         "CD4-APC-A" = "/Singlets/CD45+/CD3+/CD4+",
         "CD8-AF700-A" = "/Singlets/CD45+/CD3+/CD8+",
         "CD3-AA750-A" = "/Singlets/CD45+/CD3+",
         "CD57-PB-A" = c(
-            "/Singlets/CD45+/CD3+/CD4+/CD4+ CD57+ PD1+",
-            "/Singlets/CD45+/CD3+/CD4+/CD4+ CD57+ PD1-",
-            "/Singlets/CD45+/CD3+/CD8+/CD8+ CD57+ PD1+",
-            "/Singlets/CD45+/CD3+/CD8+/CD8+ CD57+ PD1-"
+            "/Singlets/CD45+/CD3+/CD4+/CD57+PD1+",
+            "/Singlets/CD45+/CD3+/CD4+/CD57+PD1-",
+            "/Singlets/CD45+/CD3+/CD8+/CD57+PD1+",
+            "/Singlets/CD45+/CD3+/CD8+/CD57+PD1-"
         ),
         "CD45-KrO-A" = c("/Singlets/CD45+")
     )
 
-    cycompare(
+    tmp <- cycompare(
         flowframes = ff_list_downsampled,
         ff_columns_relevant = names(relevant_mn),
         df = df,
@@ -80,4 +80,7 @@ test_that("CyCompare Badalona samples", {
         gatename_primary = "/Singlets/CD45+/CD3+",
         marker_to_gate = marker_to_gate
     )
+    pdf("removeme.pdf", width = 20)
+    print(tmp)
+    dev.off()
 })

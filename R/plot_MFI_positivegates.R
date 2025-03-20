@@ -22,6 +22,9 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
 
     # Filter dt_count_mfi to keep only relevant gating populations
     dt_count_mfi_relevant <- dt_count_mfi[pop %in% relevant_gates]
+    if (!nrow(dt_count_mfi_relevant) == length(relevant_gates) * length(unique(dt_count_mfi[, File]))) {
+        warning("Not all relevant gates are present in the MFI data.")
+    }
 
     # Merge the filtered MFI data with marker-to-gate mappings using 'pop' as the key
     dt <- marker_to_gate_dt[dt_count_mfi_relevant, on = "pop"]
@@ -33,7 +36,6 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
         value.name = "MFI",
         variable.name = "variable"
     )
-
     # Compute median MFI values grouped by File, Device, Time, and marker
     dt_medians <- dt_long[, .(mfi_all_gates = median(MFI)), by = .(File, Device, Time, marker, variable)]
 
