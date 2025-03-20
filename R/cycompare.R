@@ -91,6 +91,12 @@ cycompare <- function(
     data.table::setnames(counts_ff, "sample", "File")
     counts_joint <- counts_ff[df, on = "File"]
 
+    if (quantile(counts_joint[pop == gatename_primary][["count"]], .9) < 100) {
+        stop(
+            "The primary gate has less than 100 cells in the 90th percentile of samples. Did you select the right gate for these samples?"
+        )
+    }
+
     # Plots of counts and percentages
     p1.2_3 <- plot_counts(counts_joint, gatename_primary, device_colors)
 
@@ -125,8 +131,7 @@ cycompare <- function(
         scale = scale,
         xdim = xdim,
         ydim = ydim,
-        seed = seed,
-        ...
+        seed = seed
     )
 
     # 5. Outcome prediction

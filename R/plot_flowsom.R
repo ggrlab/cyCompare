@@ -12,7 +12,7 @@
 #' @param xdim An integer specifying the x-dimension of the FlowSOM grid.
 #' @param ydim An integer specifying the y-dimension of the FlowSOM grid.
 #' @param seed An integer specifying the random seed for FlowSOM clustering .
-#' @param ... Additional parameters passed to `FlowSOM::FlowSOM()`.
+#' @param ... Additional parameters passed to `FlowSOM::FlowSOM()`. Todo: THIS failed and is not used right now
 #'
 #' @return A list containing:
 #'   \item{plots_pca}{A list of PCA plots for each clustering result, colored by device.}
@@ -45,7 +45,7 @@ plot_flowsom <- function(ff_gated,
                          scale = FALSE,
                          xdim = 3,
                          ydim = 3,
-                         seed = 3711283, ...) {
+                         seed = 3711283) {
     # Convert the list of flowFrames into a flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
 
@@ -74,8 +74,7 @@ plot_flowsom <- function(ff_gated,
         scale = scale, # Whether to scale the data
         xdim = xdim, # Grid x-dimension for SOM
         ydim = ydim, # Grid y-dimension for SOM
-        seed = seed, # Set random seed for reproducibility
-        ...
+        seed = seed # Set random seed for reproducibility
     )
 
     # Predict cluster assignments for the input data
@@ -155,7 +154,7 @@ plot_flowsom <- function(ff_gated,
                     axis.text.x = ggplot2::element_text(size = 6),
                     legend.position = "right",
                     legend.key.size = ggplot2::unit(.5, "cm"),
-                    legend.title = element_text(angle = -90)
+                    legend.title = ggplot2::element_text(angle = -90)
                 )
 
             # Add fold-change reference lines (x2, x10, x25)
