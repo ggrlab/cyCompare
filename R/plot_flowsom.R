@@ -114,7 +114,7 @@ plot_flowsom <- function(ff_gated,
         x_data_numeric <- x_data |> dplyr::select(-sample)
 
         # Compute cluster proportions per sample
-        proportions <- x_data_numeric / rowSums(x_data_numeric)
+        proportions <- sweep(x_data_numeric, 1, rowSums(x_data_numeric), "/") 
         x_data[, -1] <- proportions
 
         # Merge with metadata
@@ -186,7 +186,7 @@ plot_flowsom <- function(ff_gated,
                     geom = "raster"
                 ) +
                 ggplot2::labs(
-                    fill = "Log2(n cells in all clusters and samples)"
+                    fill = "Log10(n cells in all clusters and samples)"
                 ) +
                 ggplot2::scale_fill_viridis_c(na.value = NA)
         }
