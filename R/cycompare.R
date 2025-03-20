@@ -10,6 +10,7 @@
 #'        (default: `asinh(x / 1e3)`).
 #' @param gatingsets A named list of gating sets for each dataset.
 #' @param gatename_primary A character string specifying the primary gating population.
+#' @param max_events_postgate An integer specifying the maximum number of events to keep post-gating.
 #' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
 #' @param outcome_columns_df A `data.table` containing outcome variables for prediction (not currently used).
 #' @param outcome_models A list of models for outcome prediction (not currently used).
@@ -39,6 +40,7 @@ cycompare <- function(
     transformlist = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
+    max_events_postgate = 10e3,
     marker_to_gate,
     outcome_columns_df,
     outcome_models,
@@ -116,7 +118,11 @@ cycompare <- function(
         meanratio = TRUE
     )
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
-    gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
+    # Limit the number of events post-gating and select only the relevant columns
+    gated_ff <- lapply(gated_ff, function(x) {
+        nevents <- min(flowCore::nrow(x), max_events_postgate)
+        x[sample(flowCore::nrow(x), nevents, replace = FALSE), ff_columns_relevant]
+    })
 
     # 2. Density plots
     p2.2 <- plot_densities(

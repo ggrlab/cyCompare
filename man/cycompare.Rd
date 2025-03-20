@@ -11,6 +11,7 @@ cycompare(
   transformlist = function(x) asinh(x/1000),
   gatingsets,
   gatename_primary,
+  max_events_postgate = 10000,
   marker_to_gate,
   outcome_columns_df,
   outcome_models,
@@ -37,6 +38,8 @@ cycompare(
 \item{gatingsets}{A named list of gating sets for each dataset.}
 
 \item{gatename_primary}{A character string specifying the primary gating population.}
+
+\item{max_events_postgate}{An integer specifying the maximum number of events to keep post-gating.}
 
 \item{marker_to_gate}{A named vector mapping marker names to their corresponding gates.}
 
