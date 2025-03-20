@@ -1,3 +1,37 @@
+#' Compare Flow Cytometry Data Across Devices
+#'
+#' This function performs a comparative analysis of flow cytometry data across multiple devices.
+#' It includes basic sample statistics, gating, density plots, FlowSOM clustering, and marker intensity comparisons.
+#'
+#' @param flowframes A named list of `flowFrame` objects containing flow cytometry data.
+#' @param df A `data.table` containing metadata with at least the columns `"File"`, `"Device"`, and `"Sample"`.
+#' @param ff_columns_relevant A character vector specifying the relevant markers for analysis.
+#' @param transformlist A transformation function or a named list of functions for transforming marker intensities
+#'        (default: `asinh(x / 1e3)`).
+#' @param gatingsets A named list of gating sets for each dataset.
+#' @param gatename_primary A character string specifying the primary gating population.
+#' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
+#' @param outcome_columns_df A `data.table` containing outcome variables for prediction (not currently used).
+#' @param outcome_models A list of models for outcome prediction (not currently used).
+#' @param device_colors A named vector or function that provides colors for each device.
+#'        If a function is provided, it should take the number of devices as input and return a vector of colors.
+#' @param nClus An integer specifying the number of clusters for FlowSOM clustering (default: 5).
+#' @param scale A logical indicating whether to scale the data in FlowSOM clustering (default: `FALSE`).
+#' @param xdim An integer specifying the x-dimension of the FlowSOM grid (default: 3).
+#' @param ydim An integer specifying the y-dimension of the FlowSOM grid (default: 3).
+#' @param seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
+#' @param ... Additional parameters passed to `plot_flowsom()`.
+#'
+#' @return A named list of ggplot2 objects containing:
+#'   \item{"Samples over time per device"}{A plot showing the number of samples collected over time per device.}
+#'   \item{"Counts and percentages"}{Plots of gated cell counts and percentages per sample.}
+#'   \item{"Positive population MFI"}{Plots showing the median fluorescence intensity (MFI) of positive gated populations.}
+#'   \item{"Density plots"}{Density distributions of marker intensities across devices and samples.}
+#'   \item{"Flowsom_PCA"}{Principal Component Analysis (PCA) plots of FlowSOM clustering results.}
+#'   \item{"Flowsom_MA"}{MA plots comparing cluster proportions between devices.}
+#'
+#' @export
+
 cycompare <- function(
     flowframes,
     df,
@@ -26,8 +60,8 @@ cycompare <- function(
                 device_colors(length(unique_devices))[seq_along(unique_devices)],
                 unique_devices
             )
-            print("The following device colors were automatically assigned:")
-            print(device_colors)
+            warning("The following device colors were automatically assigned:")
+            warning(paste0(device_colors, collapse = ", "))
         } else {
             stop("device_colors must be a named vector or a function(number_of_devices)")
         }
@@ -82,7 +116,6 @@ cycompare <- function(
     # 3. OTD
 
     # 4 Clustering with FlowSOM
-    browser()
     p_flowsom <- plot_flowsom(
         ff_gated = gated_ff,
         df = df,

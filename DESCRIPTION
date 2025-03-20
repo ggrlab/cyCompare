@@ -18,4 +18,5 @@ Imports:
     cytobench,
     data.table,
     flowCore,
-    flowWorkspace
+    flowWorkspace,
+    RColorBrewer
