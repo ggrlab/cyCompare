@@ -2,6 +2,7 @@ cycompare <- function(
     flowframes,
     df,
     ff_columns_relevant,
+    transformlist = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
     marker_to_gate,
@@ -59,24 +60,34 @@ cycompare <- function(
         dt_count_mfi = counts_joint,
         marker_to_gate = marker_to_gate,
         device_colors = device_colors,
-        transformlist = function(x) {
-            asinh(x / 1e3)
-        }
+        transformlist = transformlist
     )
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
+    gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
 
     # 2. Density plots
     p2.2 <- plot_densities(
-        ff_gated = lapply(gated_ff, function(x) x[, ff_columns_relevant]),
+        ff_gated = gated_ff,
         df = df,
         device_colors = device_colors,
-        transformlist = function(x) {
-            asinh(x / 1e3)
-        }
+        transformlist = transformlist
     )
 
     # 3. OTD
 
     # 4 Clustering with FlowSOM
     browser()
+    p_flowsom <- plot_flowsom(
+        ff_gated = gated_ff,
+        df = df,
+        device_colors = device_colors,
+        transformlist = transformlist,
+                         nClus = 5,
+                         scale = FALSE,
+                         xdim = 3,
+                         ydim = 3,
+                         seed = 3711283
+    )
+
+    
 }
