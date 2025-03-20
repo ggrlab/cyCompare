@@ -47,6 +47,7 @@
 #' # Access MA plots
 #' plot_results$p_MA[[1]]
 #' }
+#'
 plot_flowsom <- function(ff_gated,
                          df,
                          device_colors,
@@ -56,7 +57,10 @@ plot_flowsom <- function(ff_gated,
                          xdim = 3,
                          ydim = 3,
                          seed = 3711283, ...) {
+    # Convert the list of flowFrames into a flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
+
+    # If a single transformation function is provided, apply it to all markers
     if (length(transformlist) == 1) {
         fc_transformlist <- flowCore::transformList(
             flowCore::colnames(gated_fs[[1]]),
@@ -68,23 +72,34 @@ plot_flowsom <- function(ff_gated,
             transformlist
         )
     }
+
+    # Apply transformation to the flowSet
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)
+
+    # Perform FlowSOM clustering on the transformed data
     flowsom_all <- FlowSOM::FlowSOM(
         input = gated_fs_transformed,
-        transform = FALSE,
+        transform = FALSE, # Data is already transformed
         transformList = NULL,
-        nClus = nClus,
-        scale = scale,
-        xdim = xdim,
-        ydim = ydim,
-        seed = seed,
+        nClus = nClus, # Number of clusters
+        scale = scale, # Whether to scale the data
+        xdim = xdim, # Grid x-dimension for SOM
+        ydim = ydim, # Grid y-dimension for SOM
+        seed = seed, # Set random seed for reproducibility
         ...
     )
+
+    # Predict cluster assignments for the input data
     fs_pred <- cytobench::flowSOM_predict(flowsom_all, gated_fs_transformed)
 
+    # Generate PCA plots for FlowSOM clusters
     plots_pca <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
+
+        # Perform PCA on cluster abundance data
         res_pca <- stats::prcomp(x_data |> dplyr::select(-sample), scale = TRUE)
+
+        # Generate PCA plot using ggfortify
         ggfortify:::autoplot.prcomp(
             res_pca,
             data = df,
@@ -94,55 +109,67 @@ plot_flowsom <- function(ff_gated,
             ggplot2::theme(legend.position = "top") +
             ggplot2::labs(
                 title = "PCA of FlowSOM",
-                subtitle = x,
+                subtitle = x
             )
     })
 
-    ## MA plot
+    ## Generate MA plots to compare cluster proportions between devices
     p_MA <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
         x_data_numeric <- x_data |> dplyr::select(-sample)
-        proportions <- x_data_numeric / rowSums(x_data_numeric)
 
+        # Compute cluster proportions per sample
+        proportions <- x_data_numeric / rowSums(x_data_numeric)
         x_data[, -1] <- proportions
+
+        # Merge with metadata
         x_data_df <- dplyr::left_join(x_data, df, by = c("sample" = "File"))
+
+        # Convert data to long format for visualization
         x_data_df_long <- x_data_df |>
             tidyr::pivot_longer(
                 cols = tidyr::all_of(grep(colnames(x_data_df), pattern = "[cC]luster", value = TRUE)),
                 names_to = "cluster_id",
                 values_to = "proportion"
             )
+
+        # Reshape data to compare proportions per device
         x_data_df_persample <- x_data_df_long |>
-            dplyr::select(
-                Device, SuperSample, Sample, cluster_id, proportion
-            ) |>
+            dplyr::select(Device, SuperSample, Sample, cluster_id, proportion) |>
             tidyr::pivot_wider(
                 names_from = c("Device"),
                 values_from = "proportion"
             )
+
+        # Generate all pairwise comparisons of devices
         device_combinations <- combn(names(device_colors), 2)
         plotlist <- list()
+
         for (combination_i in seq_len(ncol(device_combinations))) {
             device_combination <- device_combinations[, combination_i]
             d1 <- device_combination[1]
             d2 <- device_combination[2]
+
+            # Create an MA plot (log-ratio vs mean) for cluster proportions
             p0 <- ggplot2::ggplot(
                 x_data_df_persample,
                 ggplot2::aes(
-                    y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)),
-                    x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2)
+                    y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)), # Log fold-change
+                    x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2) # Mean proportion
                 )
             ) +
                 ggplot2::ggtitle(paste0(d1, " vs ", d2)) +
-                ggplot2::geom_abline(intercept = 0, slope = 0) +
+                ggplot2::geom_abline(intercept = 0, slope = 0) + # Reference line at log2 fold-change = 0
                 ggplot2::theme_bw() +
-                ggplot2::scale_x_log10() +
+                ggplot2::scale_x_log10() + # Log-scale for x-axis
                 ggplot2::theme(
                     axis.text.x = ggplot2::element_text(size = 6),
                     legend.position = "right",
                     legend.key.size = ggplot2::unit(.5, "cm"),
                     legend.title = element_text(angle = -90)
                 )
+
+            # Add fold-change reference lines (x2, x10, x25)
             for (specific_lines in c(2, 10, 25)) {
                 p0 <- p0 +
                     ggplot2::geom_hline(
@@ -156,26 +183,26 @@ plot_flowsom <- function(ff_gated,
                         hjust = 0, vjust = 0, size = 2.5
                     )
             }
-            # print(p0 + geom_point(size = .2, alpha = .3))
+
+            # Overlay density information using a 2D histogram
             plotlist[[combination_i]] <- p0 +
                 ggplot2::stat_bin_2d(
-                    ggplot2::aes(fill = log10(ggplot2::after_stat(count))),
+                    ggplot2::aes(fill = log10(ggplot2::after_stat(count))), # Log-transformed count for coloring
                     bins = 100,
-                    # interpolate = TRUE,
                     geom = "raster"
                 ) +
                 ggplot2::labs(
                     fill = "Log2(n cells in all clusters and samples)"
                 ) +
-                ggplot2::scale_fill_viridis_c(
-                    na.value = NA
-                )
+                ggplot2::scale_fill_viridis_c(na.value = NA)
         }
     })
+
+    # Return both PCA and MA plots as a list
     return(
         list(
-            plots_pca = plots_pca,
-            p_MA = p_MA
+            plots_pca = plots_pca, # List of PCA plots
+            p_MA = p_MA # List of MA plots
         )
     )
 }
