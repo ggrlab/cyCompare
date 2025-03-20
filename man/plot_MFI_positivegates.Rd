@@ -8,7 +8,8 @@ plot_MFI_positivegates(
   dt_count_mfi,
   marker_to_gate,
   device_colors,
-  transformlist = NULL
+  transformlist = NULL,
+  meanratio = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ plot_MFI_positivegates(
 \item{device_colors}{A named vector specifying custom colors for devices (e.g., \code{c("Device1" = "red", "Device2" = "blue")}).}
 
 \item{transformlist}{An optional named list of transformation functions for each marker (e.g., \code{list("CD3" = log10, "CD4" = sqrt)}). If a single value or function is provided, it will be applied to all markers.}
+
+\item{meanratio}{A logical indicating whether to plot the ratio of MFI to the mean MFI for each marker or the transformed MFI values (default: \code{FALSE}).}
 }
 \value{
 A \code{ggplot2} object visualizing the transformed MFI over time for each marker.

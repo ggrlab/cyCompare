@@ -13,8 +13,7 @@ plot_flowsom(
   scale = FALSE,
   xdim = 3,
   ydim = 3,
-  seed = 3711283,
-  ...
+  seed = 3711283
 )
 }
 \arguments{
@@ -36,7 +35,7 @@ plot_flowsom(
 
 \item{seed}{An integer specifying the random seed for FlowSOM clustering .}
 
-\item{...}{Additional parameters passed to \code{FlowSOM::FlowSOM()}.}
+\item{...}{Additional parameters passed to \code{FlowSOM::FlowSOM()}. Todo: THIS failed and is not used right now}
 }
 \value{
 A list containing:
