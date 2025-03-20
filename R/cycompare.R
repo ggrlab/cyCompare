@@ -10,7 +10,13 @@ cycompare <- function(
     outcome_models,
     device_colors = function(n) {
         RColorBrewer::brewer.pal(n, "Dark2")
-    }) {
+    },
+    # FlowSOM parameters
+    nClus = 5,
+    scale = FALSE,
+    xdim = 3,
+    ydim = 3,
+    seed = 3711283) {
     unique_devices <- unique(df[["Device"]])
     if (!all(unique_devices %in% names(device_colors))) {
         if (is.function(device_colors)) {
@@ -82,12 +88,24 @@ cycompare <- function(
         df = df,
         device_colors = device_colors,
         transformlist = transformlist,
-                         nClus = 5,
-                         scale = FALSE,
-                         xdim = 3,
-                         ydim = 3,
-                         seed = 3711283
+        nClus = nClus,
+        scale = scale,
+        xdim = xdim,
+        ydim = ydim,
+        seed = seed,
+        ...
     )
 
-    
+    # 5. Outcome prediction
+
+    return(
+        list(
+            "Samples over time per device" = p1.1,
+            "Counts and percentages" = p1.2_3,
+            "Positive population MFI" = p2.1,
+            "Density plots" = p2.2,
+            "Flowsom_PCA" = p_flowsom[["plots_pca"]],
+            "Flowsom_MA" = p_flowsom[["p_MA"]]
+        )
+    )
 }
