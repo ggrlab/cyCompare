@@ -108,6 +108,13 @@ cycompare <- function(
         device_colors = device_colors,
         transformlist = transformlist
     )
+    p2.1_ratio <- plot_MFI_positivegates(
+        dt_count_mfi = counts_joint,
+        marker_to_gate = marker_to_gate,
+        device_colors = device_colors,
+        transformlist = transformlist,
+        meanratio = TRUE
+    )
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
     gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
 
@@ -141,6 +148,7 @@ cycompare <- function(
             "Samples over time per device" = p1.1,
             "Counts and percentages" = p1.2_3,
             "Positive population MFI" = p2.1,
+            "Positive population MFI ratio" = p2.1_ratio,
             "Density plots" = p2.2,
             "Flowsom_PCA" = p_flowsom[["plots_pca"]],
             "Flowsom_MA" = p_flowsom[["p_MA"]]

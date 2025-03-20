@@ -8,9 +8,10 @@
 #' @param device_colors A named vector specifying custom colors for devices (e.g., `c("Device1" = "red", "Device2" = "blue")`).
 #' @param transformlist An optional named list of transformation functions for each marker (e.g., `list("CD3" = log10, "CD4" = sqrt)`). If a single value or function is provided, it will be applied to all markers.
 #'
+#' @param meanratio A logical indicating whether to plot the ratio of MFI to the mean MFI for each marker or the transformed MFI values (default: `FALSE`).
 #' @return A `ggplot2` object visualizing the transformed MFI over time for each marker.
 #' @export
-plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, transformlist = NULL) {
+plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, transformlist = NULL, meanratio = FALSE) {
     # Extract unique gating populations from marker_to_gate
     relevant_gates <- unique(unlist(marker_to_gate))
 
@@ -38,37 +39,45 @@ plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, 
 
     # Keep only rows where marker matches the variable name
     dt_medians_relevant <- dt_medians[marker == variable]
-
-    # Apply transformation functions to MFI values (if provided)
-    if (length(transformlist) == 1 && !is.null(transformlist)) {
-        if (is.function(transformlist)) {
-            transformlist <- list(transformlist)
-        }
-        transformlist <- setNames(
-            rep(transformlist, length(unique(dt_medians_relevant$marker))),
-            unique(dt_medians_relevant$marker)
-        )
-    }
-    for (unique_marker in unique(dt_medians_relevant$marker)) {
-        tryCatch(
-            {
-                dt_medians_relevant[marker == unique_marker, mfi_all_gates := transformlist[[unique_marker]](mfi_all_gates)]
-            },
-            error = function(e) {
-                warning(paste("Error in transformation for marker", unique_marker, ": ", e$message))
+    if (meanratio) {
+        marker_mean <- dt_medians_relevant[, .(mean_mfi = mean(mfi_all_gates)), by = .(marker)]
+        dt_medians_relevant_meanratio <- dt_medians_relevant[marker_mean, on = "marker"][, mfi_by_meanMFI := (mfi_all_gates / mean_mfi)]
+        p0 <- ggplot2::ggplot(
+            dt_medians_relevant_meanratio, ggplot2::aes(x = Time, y = mfi_by_meanMFI, color = Device)
+        ) +
+            ggplot2::ylab("Ratio MFI to meanMFI") + # Y-axis label
+            ggplot2::facet_wrap(~marker) + # Facet by marker, NO free scales
+            ggplot2::geom_hline(yintercept = 1, linetype = "dashed")
+    } else {
+        # Apply transformation functions to MFI values (if provided)
+        if (length(transformlist) == 1 && !is.null(transformlist)) {
+            if (is.function(transformlist)) {
+                transformlist <- list(transformlist)
             }
-        )
+            transformlist <- setNames(
+                rep(transformlist, length(unique(dt_medians_relevant$marker))),
+                unique(dt_medians_relevant$marker)
+            )
+        }
+        for (unique_marker in unique(dt_medians_relevant$marker)) {
+            tryCatch(
+                {
+                    dt_medians_relevant[marker == unique_marker, mfi_all_gates := transformlist[[unique_marker]](mfi_all_gates)]
+                },
+                error = function(e) {
+                    warning(paste("Error in transformation for marker", unique_marker, ": ", e$message))
+                }
+            )
+        }
+        p0 <- ggplot2::ggplot(
+            dt_medians_relevant, ggplot2::aes(x = Time, y = mfi_all_gates, color = Device)
+        ) +
+            ggplot2::facet_wrap(~marker, scales = "free_y") + # Facet by marker
+            ggplot2::ylab("Transformed MFI") # Y-axis label
     }
-
-    # Generate ggplot visualization
-    p0 <- ggplot2::ggplot(
-        dt_medians_relevant, ggplot2::aes(x = Time, y = mfi_all_gates, color = Device)
-    ) +
-        ggplot2::geom_point() + # Scatter plot of data points
+    p0 <- p0 + ggplot2::geom_point() + # Scatter plot of data points
         ggpubr::theme_pubclean() + # Clean publication-ready theme
-        ggplot2::facet_wrap(~marker, scales = "free_y") + # Facet by marker
         ggplot2::geom_smooth(formula = y ~ x, method = "loess", se = TRUE, alpha = .2) + # Smoothed trend with confidence interval
-        ggplot2::ylab("Transformed MFI") + # Y-axis label
         ggplot2::xlab("Time") # X-axis label
 
     # Apply custom device colors if provided
