@@ -18,6 +18,9 @@ cycompare(
   device_colors = function(n) {
      RColorBrewer::brewer.pal(n, "Dark2")
  },
+  OTD_kwargs_loss = list(loss = lossfun_hist, verbose = FALSE, write_intermediate =
+    FALSE, should_skip = function(i, j) FALSE, take_time = FALSE, return_as_matrix =
+    TRUE),
   nClus = 5,
   scale = FALSE,
   xdim = 3,
