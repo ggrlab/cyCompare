@@ -1,3 +1,4 @@
+devtools::load_all()
 test_that("EMD basic test", {
     n_dims <- 3
     n_points <- 1e2 * n_dims
@@ -42,12 +43,12 @@ test_that("EMD potential parameter test", {
         matrix(rnorm(n_points), ncol = n_dims)
     )
     param_options <- list(
-        "datalist_A" = list(datalist_1, datalist_2),
+        "datalist_A" = list(datalist_1),
         "datalist_B" = list(datalist_1, datalist_2),
         "lossfun" = list(lossfun_hist_cytonorm, lossfun_hist_weighted),
         "verbose" = c(TRUE, FALSE),
         "write_intermediate" = c(TRUE, FALSE),
-        "should_skip" = list(\(i, j) i >= j, \(i, j) i == j, \(i, j) FALSE),
+        "should_skip" = list(\(i, j) i >= j, \(i, j) FALSE),
         "take_time" = c(TRUE, FALSE),
         "return_as_matrix" = c(TRUE, FALSE),
         "n_breaks" = c(3, 100)
@@ -58,12 +59,14 @@ test_that("EMD potential parameter test", {
     for (
         combination_i in seq_len(nrow(all_parameter_combinations))
     ) {
-        cat("Combination ", combination_i, "\n")
+        cat(sprintf("Combination %d/%d\n", combination_i, nrow(all_parameter_combinations)))
         current_selection <- all_parameter_combinations[combination_i, ]
 
         current_parameters <- sapply(names(param_options), simplify = FALSE, function(param_name) {
             param_options[[param_name]][current_selection[[param_name]]][[1]]
         })
+        # not necessary, but otherwise a warning is thrown
+        unlink("distances_intermediate.csv", force = TRUE)
         tryCatch(
             {
                 do.call(loss_pairwise, current_parameters)

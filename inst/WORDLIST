@@ -8,7 +8,10 @@ cyCompare
 cytobench
 cytometry
 Cytometry
+CytoNorm
+distibution
 dplyr
+EMD
 emdist
 envoke
 flowCore
@@ -27,6 +30,7 @@ MFI
 mozilla
 oducible
 ORCID
+parallelization
 pre
 precommit
 RColorBrewer
@@ -44,3 +48,5 @@ StackOverflow
 styler
 testthat
 tidyverse
+xdist
+ydist

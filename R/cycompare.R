@@ -133,6 +133,12 @@ cycompare <- function(
     )
 
     # 3. OTD
+    p3.1 <- plot_otd(
+        ff_gated = gated_ff,
+        df = df,
+        device_colors = device_colors,
+        transformlist = transformlist
+    )
 
     # 4 Clustering with FlowSOM
     p_flowsom <- plot_flowsom(
