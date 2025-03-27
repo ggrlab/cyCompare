@@ -1,4 +1,3 @@
-devtools::load_all()
 test_that("CyCompare Badalona samples", {
     ## Preparation of a proper dataset
     ff_files <- list.files("example_data/2025-03-17_BAD", recursive = TRUE, full.names = TRUE)
