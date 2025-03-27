@@ -1,4 +1,3 @@
-devtools::load_all()
 test_that("EMD basic test", {
     n_dims <- 3
     n_points <- 1e2 * n_dims
