@@ -66,9 +66,9 @@
 #' @export
 loss_pairwise <- function(datalist_A,
                           datalist_B,
-                          loss,
+                          loss = lossfun_hist,
                           verbose = FALSE,
-                          write_intermediate = TRUE,
+                          write_intermediate = FALSE,
                           should_skip = function(i, j) i >= j,
                           take_time = FALSE,
                           return_as_matrix = TRUE,
@@ -110,15 +110,15 @@ loss_pairwise <- function(datalist_A,
 
     ### 3. Compute the distances
     intermediate_file <- "distances_intermediate.csv"
+    dt_res <- data.table::data.table(
+        "sample_A_i" = NA_integer_,
+        "sample_B_j" = NA_integer_,
+        "dist" = NA_real_,
+        "time" = NA_real_,
+        "sample_A" = NA_character_,
+        "sample_B" = NA_character_
+    )
     if (write_intermediate) {
-        dt_res <- data.table::data.table(
-            "sample_A_i" = NA_integer_,
-            "sample_B_j" = NA_integer_,
-            "dist" = NA_real_,
-            "time" = NA_real_,
-            "sample_A" = NA_character_,
-            "sample_B" = NA_character_
-        )
         if (file.exists(intermediate_file)) {
             warning("Intermediate file already exists. Overwriting it with an empty file.")
         }
