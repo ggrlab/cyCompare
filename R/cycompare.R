@@ -47,6 +47,16 @@ cycompare <- function(
     device_colors = function(n) {
         RColorBrewer::brewer.pal(n, "Dark2")
     },
+    # OTD parameters
+    OTD_kwargs_loss = list(
+        loss = lossfun_hist,
+        verbose = FALSE,
+        write_intermediate = FALSE,
+        # Do not skip any comparisons
+        should_skip = function(i, j) FALSE,
+        take_time = FALSE,
+        return_as_matrix = TRUE
+    ),
     # FlowSOM parameters
     nClus = 5,
     scale = FALSE,
@@ -137,7 +147,9 @@ cycompare <- function(
         ff_gated = gated_ff,
         df = df,
         device_colors = device_colors,
-        transformlist = transformlist
+        transformlist = transformlist,
+        n_mastersample = max_events_postgate,
+        kwargs_loss = OTD_kwargs_loss
     )
 
     # 4 Clustering with FlowSOM
@@ -162,6 +174,7 @@ cycompare <- function(
             "Positive population MFI" = p2.1,
             "Positive population MFI ratio" = p2.1_ratio,
             "Density plots" = p2.2,
+            "OTD to mastersample" = p3.1,
             "Flowsom_PCA" = p_flowsom[["plots_pca"]],
             "Flowsom_MA" = p_flowsom[["p_MA"]]
         )
