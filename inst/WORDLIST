@@ -8,6 +8,8 @@ cyCompare
 cytobench
 cytometry
 Cytometry
+dplyr
+emdist
 envoke
 flowCore
 FlowSOM

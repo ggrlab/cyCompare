@@ -51,9 +51,6 @@
 #'
 #' If `parallel = TRUE`, the function uses nested `future_lapply` calls from the `future.apply` package.
 #'
-#' @importFrom dplyr filter
-#' @importFrom data.table data.table fwrite
-#' @importFrom future.apply future_lapply
 #' @examples
 #' # Define dummy data and a simple loss function
 #' A <- list(a = 1:5, b = 6:10)
@@ -129,11 +126,19 @@ loss_pairwise <- function(datalist_A,
             append = FALSE
         )
     }
+    # check if future is available
 
-    distances <- future.apply::future_apply(
+    if (length(find.package("future.apply", quiet = TRUE)) == 0) {
+        # Then future.apply is not installed and we use base (-->sequential) apply
+        applyfun <- apply
+    } else {
+        applyfun <- future.apply::future_apply
+    }
+    distances <- applyfun(
         filtered_combinations[, c("sample_A_i", "sample_B_j")],
         MARGIN = 1, # Apply over rows
-        function(sample_Ai_Bj) {
+        simplify = FALSE,
+        FUN = function(sample_Ai_Bj) {
             sample_A_i <- sample_Ai_Bj[["sample_A_i"]]
             sample_B_j <- sample_Ai_Bj[["sample_B_j"]]
             if (verbose) {
@@ -192,87 +197,3 @@ loss_pairwise <- function(datalist_A,
         )
     )
 }
-
-
-# metric_batches <- function(..., reference_mat_meta = NULL, single_metric = single_metric_emd, parallel = TRUE, verbose = TRUE, intermediate_dir = NA) {
-#     if (parallel) {
-#         metric_pairwise_fun <- metric_pairwise_foreach
-#     } else {
-#         metric_pairwise_fun <- metric_pairwise
-#     }
-#     vals <- list(...)
-#     if (!is.null(reference_mat_meta)) {
-#         if ("reference" %in% names(vals)) {
-#             stop("Cannot specify both reference_mat_meta and reference")
-#         } else {
-#             vals[["reference"]] <- reference_mat_meta
-#         }
-#     }
-#     if (any(names(vals) == "")) {
-#         stop("All arguments must be named")
-#     }
-#     if (anyDuplicated(names(vals)) != 0) {
-#         stop("All argument names must be unique")
-#     }
-
-#     # I assume that every element of vals is a list of length 2
-#     # The first element is a list of multiple matrices \in R^{n_cells x p_parameters}
-#     # The second element is a vector of meta values
-#     vals_formatted <- lapply(vals, function(vals_X) {
-#         if (length(vals_X) != 2) {
-#             stop("Each given argument must be a list of length 2: A list of matrices (n_cells x p_parameters) and a vector of meta values (N matrices)")
-#         }
-#         if (!"list" %in% class(vals_X[[1]])) {
-#             stop("The first element of each argument must be a list of matrices")
-#         }
-#         if (length(vals_X[[2]]) != length(vals_X[[1]])) {
-#             stop("The second element of each argument must be a vector of length ", length(x[[1]]))
-#         }
-#         mats_meta <- list()
-#         for (mat_i in seq_len(length(vals_X[[1]]))) {
-#             mats_meta[[mat_i]] <- data.table::data.table(vals_X[[1]][[mat_i]])
-#             mats_meta[[mat_i]][, "batch_ID" := vals_X[[2]][mat_i]]
-#         }
-#         return(data.table::rbindlist(mats_meta))
-#     })
-
-#     if (intermediate_dir == TRUE) {
-#         intermediate_dir <- paste0("intermediate_pairwise_", format(Sys.time(), "%Y-%m-%d_%H.%M.%S"))
-#     }
-#     if (!is.na(intermediate_dir)) {
-#         dir.create(intermediate_dir, recursive = TRUE)
-#     }
-
-#     res <- list()
-#     do_break <- "reference" %in% names(vals)
-#     for (arg_i in seq_len(length(vals_formatted))) {
-#         res[[names(vals_formatted)[arg_i]]] <- list()
-#         for (arg_j in seq_len(length(vals_formatted))) {
-#             if (!is.na(intermediate_dir)) {
-#                 current_intermediate_dir <- file.path(intermediate_dir, paste0(names(vals_formatted)[arg_i], "_vs_", names(vals_formatted)[arg_j]))
-#                 dir.create(current_intermediate_dir, recursive = TRUE)
-#             }
-
-#             if ("reference" %in% names(vals)) {
-#                 arg_j <- which(names(vals) == "reference")
-#                 # Then compare all list elements to the reference
-#                 # Otherwise compare all list elements to all other list elements
-#             }
-
-#             res[[names(vals_formatted)[arg_i]]][[names(vals_formatted)[arg_j]]] <- metric_pairwise_fun(
-#                 mat_1 = vals_formatted[[arg_i]][, !"batch_ID", with = FALSE],
-#                 meta_1 = vals_formatted[[arg_i]][, "batch_ID", with = FALSE],
-#                 mat_2 = vals_formatted[[arg_j]][, !"batch_ID", with = FALSE],
-#                 meta_2 = vals_formatted[[arg_j]][, "batch_ID", with = FALSE],
-#                 single_metric = single_metric,
-#                 verbose = verbose,
-#                 intermediate_dir = current_intermediate_dir
-#             )
-#             if (do_break) {
-#                 # This is the case where we only want to compare to the reference
-#                 break
-#             }
-#         }
-#     }
-#     return(res)
-# }

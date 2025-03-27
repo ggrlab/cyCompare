@@ -16,10 +16,19 @@ test_that("EMD basic test", {
         loss = lossfun_hist,
         verbose = FALSE
     )
-    testthat::expect_true(TRUE) # Just a is-it-running test
+    # both time and distance matrices should be of the same size (here 2x3)
+    testthat::expect_equal(
+        dim(l1[[1]]),
+        c(length(datalist_1), length(datalist_2))
+    )
+    testthat::expect_equal(
+        dim(l1[[2]]),
+        c(2, 3)
+    )
+    testthat::expect_true(is.numeric(l1[[1]]))
+    testthat::expect_true(is.matrix(l1[[1]]))
 })
 
-devtools::load_all()
 test_that("EMD potential parameter test", {
     n_dims <- 3
     n_points <- 1e2 * n_dims
