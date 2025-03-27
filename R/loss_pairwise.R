@@ -168,8 +168,10 @@ loss_pairwise <- function(datalist_A,
     distances_bound_named <- dplyr::left_join(
         filtered_combinations,
         distances_bound,
-        by = c("sample_A_i", "sample_B_j")
+        by = c("sample_A_i", "sample_B_j"),
+        suffix = c("", "_removeme")
     )
+    distances_bound_named <- distances_bound_named[, -grep("_removeme", names(distances_bound_named))]
     return(
         parse_pairwise_loss(
             bound_or_file = distances_bound_named,

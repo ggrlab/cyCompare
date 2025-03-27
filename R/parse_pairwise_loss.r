@@ -78,17 +78,23 @@ parse_pairwise_loss <- function(
 
     if (return_as_matrix) {
         retmat <- matrix(NA, nrow = length_a, ncol = length_b)
+        rownames(retmat) <- rep(NA_character_, length_a)
+        colnames(retmat) <- rep(NA_character_, length_b)
         timemat <- retmat
         for (row_i in seq_len(nrow(bound_matrix))) {
-            retmat[bound_matrix[row_i, "sample_A_i"], bound_matrix[row_i, "sample_B_j"]] <- bound_matrix[row_i, "dist"]
-            timemat[bound_matrix[row_i, "sample_A_i"], bound_matrix[row_i, "sample_B_j"]] <- bound_matrix[row_i, "time"]
+            row_i_rowA <- bound_matrix[row_i, "sample_A_i"]
+            row_i_colB <- bound_matrix[row_i, "sample_B_j"]
+            retmat[row_i_rowA, row_i_colB] <- bound_matrix[row_i, "dist"]
+            timemat[row_i_rowA, row_i_colB] <- bound_matrix[row_i, "time"]
+
+            if ("sample_A" %in% colnames(bound_matrix)) {
+                rownames(retmat)[row_i_rowA] <- bound_matrix[["sample_A"]][row_i_rowA]
+            }
+            if ("sample_B" %in% colnames(bound_matrix)) {
+                colnames(retmat)[row_i_colB] <- bound_matrix[["sample_B"]][row_i_colB]
+            }
         }
-        if ("sample_A" %in% colnames(bound_matrix)) {
-            rownames(retmat) <- bound_matrix[["sample_A"]]
-        }
-        if ("sample_B" %in% colnames(bound_matrix)) {
-            colnames(retmat) <- bound_matrix[["sample_B"]]
-        }
+        dimnames(timemat) <- dimnames(retmat)
         return(list("dist" = retmat, "time" = timemat))
     } else {
         return(bound_matrix)
