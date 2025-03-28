@@ -77,8 +77,6 @@ test_that("CyCompare Badalona samples", {
         ff_columns_relevant = names(relevant_mn),
         df = df,
         max_events_postgate = 1e4,
-        outcome_columns_df = c("outcome_1", "outcome_2"),
-        outcome_models = list("glmnet" = glmnet::cv.glmnet),
         gatingsets = gslist,
         gatename_primary = "/Singlets/CD45+/CD3+",
         marker_to_gate = marker_to_gate

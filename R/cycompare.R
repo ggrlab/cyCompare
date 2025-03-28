@@ -12,8 +12,6 @@
 #' @param gatename_primary A character string specifying the primary gating population.
 #' @param max_events_postgate An integer specifying the maximum number of events to keep post-gating.
 #' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
-#' @param outcome_columns_df A `data.table` containing outcome variables for prediction (not currently used).
-#' @param outcome_models A list of models for outcome prediction (not currently used).
 #' @param device_colors A named vector or function that provides colors for each device.
 #'        If a function is provided, it should take the number of devices as input and return a vector of colors.
 #' @param nClus An integer specifying the number of clusters for FlowSOM clustering (default: 5).
@@ -42,8 +40,6 @@ cycompare <- function(
     gatename_primary,
     max_events_postgate = 10e3,
     marker_to_gate,
-    outcome_columns_df,
-    outcome_models,
     device_colors = function(n) {
         RColorBrewer::brewer.pal(n, "Dark2")
     },
