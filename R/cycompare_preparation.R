@@ -1,3 +1,26 @@
+#' Prepare Gated FlowFrames and Metadata for Cross-Device Comparison
+#'
+#' This function applies a primary gating step to flow cytometry data,
+#' assigns colors to devices, and prepares both gated events and metadata
+#' for downstream analyses such as visualization or normalization.
+#'
+#' @param flowframes A named list of `flowFrame` objects. Names must match sample identifiers in `df`.
+#' @param df A data.frame containing metadata for each sample, including a "Device" column.
+#' @param ff_columns_relevant A character vector of column names to retain after gating (e.g., marker channels).
+#' @param device_colors Either a named character vector mapping device names to colors, or a function `f(n)` returning `n` colors.
+#'                      Defaults to using `RColorBrewer::brewer.pal(n, "Dark2")`.
+#' @param gatingsets A named list of `GatingSet` objects used for gating, one per sample.
+#' @param gatename_primary The name of the primary gate used to subset events (e.g., "Live").
+#' @param max_events_postgate Maximum number of events to retain per sample after gating. Default is 10,000.
+#'
+#' @return A list with the following elements:
+#' \describe{
+#'   \item{gated_ff}{A list of gated and downsampled `flowFrame` objects, keeping only relevant columns.}
+#'   \item{counts_joint}{A data.table with per-sample gated cell counts merged with metadata.}
+#'   \item{device_colors}{Named vector of device colors used, auto-assigned if a function was provided.}
+#' }
+#'
+#' @export
 cycompare_preparation <- function(
     flowframes,
     df,
@@ -8,12 +31,15 @@ cycompare_preparation <- function(
     gatingsets,
     gatename_primary,
     max_events_postgate = 10e3) {
+    
+    # Identify all unique devices in metadata
     unique_devices <- unique(df[["Device"]])
+
+    # Assign colors if a function is provided instead of a named vector
     if (!all(unique_devices %in% names(device_colors))) {
         if (is.function(device_colors)) {
-            # Automatically assign colors
+            # Auto-assign colors (ensure at least 3 colors for RColorBrewer)
             device_colors <- setNames(
-                # RColorBrewer takes a minimum of 3 colors, thus the seq_along
                 device_colors(length(unique_devices))[seq_along(unique_devices)],
                 unique_devices
             )
@@ -24,8 +50,7 @@ cycompare_preparation <- function(
         }
     }
 
-
-    #### Gate each sample to the primary gate
+    # Apply the primary gate to each sample using cytobench::gate_cells
     gated_ff <- sapply(
         names(flowframes),
         simplify = FALSE,
@@ -40,24 +65,30 @@ cycompare_preparation <- function(
             tmp
         }
     )
+
+    # Collect and join cell counts with metadata
     counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist()
     data.table::setnames(counts_ff, "sample", "File")
     counts_joint <- counts_ff[df, on = "File"]
 
+    # Sanity check: ensure gate captures sufficient events
     if (quantile(counts_joint[pop == gatename_primary][["count"]], .9) < 100) {
         stop(
-            "The primary gate has less than 100 cells in the 90th percentile of samples. Did you select the right gate for these samples?"
+            "The primary gate has less than 100 cells in the 90th percentile of samples. ",
+            "Did you select the right gate for these samples?"
         )
     }
 
-
+    # Extract gated flowFrames
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
-    # Limit the number of events post-gating and select only the relevant columns
+
+    # Downsample and select only relevant columns
     gated_ff <- lapply(gated_ff, function(x) {
         nevents <- min(flowCore::nrow(x), max_events_postgate)
         x[sample(flowCore::nrow(x), nevents, replace = FALSE), ff_columns_relevant]
     })
 
+    # Return result
     return(
         list(
             gated_ff = gated_ff,
