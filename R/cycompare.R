@@ -59,51 +59,24 @@ cycompare <- function(
     xdim = 3,
     ydim = 3,
     seed = 3711283) {
-    unique_devices <- unique(df[["Device"]])
-    if (!all(unique_devices %in% names(device_colors))) {
-        if (is.function(device_colors)) {
-            # Automatically assign colors
-            device_colors <- setNames(
-                # RColorBrewer takes a minimum of 3 colors, thus the seq_along
-                device_colors(length(unique_devices))[seq_along(unique_devices)],
-                unique_devices
-            )
-            warning("The following device colors were automatically assigned:")
-            warning(paste0(device_colors, collapse = ", "))
-        } else {
-            stop("device_colors must be a named vector or a function(number_of_devices)")
-        }
-    }
+    prepared <- cycompare_preparation(
+        flowframes = flowframes,
+        df = df,
+        ff_columns_relevant = ff_columns_relevant,
+        device_colors = device_colors,
+        gatingsets = gatingsets,
+        gatename_primary = gatename_primary,
+        max_events_postgate = max_events_postgate
+    )
+    gated_ff <- prepared[["gated_ff"]]
+    counts_joint <- prepared[["counts_joint"]]
+    device_colors <- prepared[["device_colors"]]
 
     #### 1. Basic plots
     ## 1.1 Samples over time per device
     p1.1 <- plot_samples_by_time(df)
 
 
-    #### Gate each sample to the primary gate
-    gated_ff <- sapply(
-        names(flowframes),
-        simplify = FALSE,
-        function(x) {
-            tmp <- cytobench::gate_cells(
-                flowset = flowCore::flowSet(flowframes[[x]]),
-                gatingset = gatingsets[[x]],
-                gatename = gatename_primary,
-                verbose = FALSE
-            )
-            tmp[["counts"]][["sample"]] <- x
-            tmp
-        }
-    )
-    counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist()
-    data.table::setnames(counts_ff, "sample", "File")
-    counts_joint <- counts_ff[df, on = "File"]
-
-    if (quantile(counts_joint[pop == gatename_primary][["count"]], .9) < 100) {
-        stop(
-            "The primary gate has less than 100 cells in the 90th percentile of samples. Did you select the right gate for these samples?"
-        )
-    }
 
     # Plots of counts and percentages
     p1.2_3 <- plot_counts(counts_joint, gatename_primary, device_colors)
@@ -123,12 +96,6 @@ cycompare <- function(
         transformlist = transformlist,
         meanratio = TRUE
     )
-    gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
-    # Limit the number of events post-gating and select only the relevant columns
-    gated_ff <- lapply(gated_ff, function(x) {
-        nevents <- min(flowCore::nrow(x), max_events_postgate)
-        x[sample(flowCore::nrow(x), nevents, replace = FALSE), ff_columns_relevant]
-    })
 
     # 2. Density plots
     p2.2 <- plot_densities(
