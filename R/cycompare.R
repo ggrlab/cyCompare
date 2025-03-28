@@ -10,7 +10,7 @@
 #'        (default: `asinh(x / 1e3)`).
 #' @param gatingsets A named list of gating sets for each dataset.
 #' @param gatename_primary A character string specifying the primary gating population.
-#' @param max_events_postgate An integer specifying the maximum number of events to keep post-gating.
+#' @param n_events_postgate An integer specifying the maximum number of events to keep post-gating.
 #' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
 #' @param device_colors A named vector or function that provides colors for each device.
 #'        If a function is provided, it should take the number of devices as input and return a vector of colors.
@@ -38,7 +38,8 @@ cycompare <- function(
     transformlist = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
-    max_events_postgate = 10e3,
+    n_events_postgate = 10e3,
+    postgate_sample_seed = 42,
     marker_to_gate,
     device_colors = function(n) {
         RColorBrewer::brewer.pal(n, "Dark2")
@@ -66,7 +67,8 @@ cycompare <- function(
         device_colors = device_colors,
         gatingsets = gatingsets,
         gatename_primary = gatename_primary,
-        max_events_postgate = max_events_postgate
+        n_events_postgate = n_events_postgate,
+        seed = postgate_sample_seed
     )
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
@@ -111,7 +113,7 @@ cycompare <- function(
         df = df,
         device_colors = device_colors,
         transformlist = transformlist,
-        n_mastersample = max_events_postgate,
+        n_mastersample = n_events_postgate,
         kwargs_loss = OTD_kwargs_loss
     )
 

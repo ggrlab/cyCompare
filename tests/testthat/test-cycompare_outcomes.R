@@ -1,4 +1,6 @@
-test_that("CyCompare Badalona samples", {
+devtools::load_all()
+
+test_that("CyCompare Badalona samples, outcomes", {
     ## Preparation of a proper dataset
     ff_files <- list.files("example_data/2025-03-17_BAD", recursive = TRUE, full.names = TRUE)
     ff_files_panel <- grep("panel", ff_files, value = TRUE)
@@ -22,6 +24,15 @@ test_that("CyCompare Badalona samples", {
     df[["outcome_1"]] <- rep(rep(c("A", "B"), length.out = nrow(df) / 2), 2)
     df[["outcome_2"]] <- rep(rep(c(2.3, 5.1), length.out = nrow(df) / 2), 2)
     df[["train_validation_test"]] <- rep(c("train", "train", "test"), 2)
+    df_artificial <- df[1:3, ]
+    df_artificial$Device <- "NEW_aurora"
+    df_artificial$SuperSample <- "NEW_Donor_1"
+    df_artificial$File <- gsub(pattern = "/2025-03-17_BAD/aurora/", replacement = "/NEW_aurora/", df_artificial$File)
+    lapply(dirname(df_artificial$File), dir.create, recursive = TRUE, showWarnings = FALSE)
+    file.copy(df[1:3, ]$File,  df_artificial$File)
+    df_complete <- rbind(df, df_artificial)
+    df_complete$Study <- c(rep("BAD", nrow(df)), rep("NEW", nrow(df_artificial)))
+
 
 
     ### Actual testing of cycompare
@@ -70,10 +81,13 @@ test_that("CyCompare Badalona samples", {
         "CD45-KrO-A" = c("/Singlets/CD45+")
     )
 
-    tmp <- cycompare(
+
+    tmp <- cycompare_outcomes(
         flowframes = ff_list_downsampled,
         ff_columns_relevant = names(relevant_mn),
-        df = df,
+        df = df_complete,
+        dfcol_outcomes = c("outcome_1", "outcome_2"),
+        outcome_models = list("glmnet" = glmnet::cv.glmnet),
         n_events_postgate = 1e4,
         gatingsets = gslist,
         gatename_primary = "/Singlets/CD45+/CD3+",

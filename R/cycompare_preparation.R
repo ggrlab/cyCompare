@@ -11,7 +11,8 @@
 #'                      Defaults to using `RColorBrewer::brewer.pal(n, "Dark2")`.
 #' @param gatingsets A named list of `GatingSet` objects used for gating, one per sample.
 #' @param gatename_primary The name of the primary gate used to subset events (e.g., "Live").
-#' @param max_events_postgate Maximum number of events to retain per sample after gating. Default is 10,000.
+#' @param n_events_postgate Exact number of events to retain per sample after gating. Might upsample cells. Default is 10,000. See `cytoBench::subsample_ff`.
+#' @param seed Random seed for reproducibility when downsampling. Default is 42.
 #'
 #' @return A list with the following elements:
 #' \describe{
@@ -30,8 +31,8 @@ cycompare_preparation <- function(
     },
     gatingsets,
     gatename_primary,
-    max_events_postgate = 10e3) {
-    
+    n_events_postgate = 10e3,
+    seed = 42) {
     # Identify all unique devices in metadata
     unique_devices <- unique(df[["Device"]])
 
@@ -83,10 +84,11 @@ cycompare_preparation <- function(
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
 
     # Downsample and select only relevant columns
-    gated_ff <- lapply(gated_ff, function(x) {
-        nevents <- min(flowCore::nrow(x), max_events_postgate)
-        x[sample(flowCore::nrow(x), nevents, replace = FALSE), ff_columns_relevant]
-    })
+    gated_ff <- lapply(gated_ff,
+        cytobench::subsample_ff,
+        n_cells = n_events_postgate,
+        seed = seed
+    )
 
     # Return result
     return(
