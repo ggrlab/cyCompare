@@ -47,10 +47,10 @@ fun_grouped_apply <- function(
     }
 
     # Iterate through each group and apply the analysis function
-    # all_results <- future.apply::future_lapply(
-    #     future.seed = TRUE,
-    #     future.conditions = "message",
-    all_results <- lapply(
+    all_results <- future.apply::future_lapply(
+        future.seed = TRUE,
+        future.conditions = "message",
+    # all_results <- lapply(
         seq_len(nrow(possible_groupings)),
         function(grouping_i) {
             grouping_x <- possible_groupings[grouping_i, ]
