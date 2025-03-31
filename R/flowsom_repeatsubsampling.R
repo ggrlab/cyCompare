@@ -4,7 +4,7 @@
 # 2) load the phenodata
 # 3) FlowSOM on the training data
 flowsom_repeatsubsampling <- function(
-    gated_ff,
+    ff_list,
     outdir,
     columns_clustering = c(
         "FITC-A", # CD45RA
@@ -27,7 +27,7 @@ flowsom_repeatsubsampling <- function(
     # Subsample the data
     train_multiple <- unlist(
         lapply(1:n_subsampling, function(i) {
-            fs_train_subsampled <- flowCore::fsApply(gated_ff, function(x) {
+            fs_train_subsampled <- flowCore::fsApply(ff_list, function(x) {
                 cytobench::subsample_ff(x, n_cells = n_subsampled_cells, seed = subsampling_seed_first + i - 1)
             })
             flowCore::sampleNames(fs_train_subsampled) <- paste0(
