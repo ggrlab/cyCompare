@@ -5,7 +5,7 @@
 #' Each grouping results in a separate function call, which can be useful
 #' for training models per sample, supersample, or condition.
 #'
-#' @param ff_list A named list or vector of flowFrames, indexed by the "File" column of df.
+#' @param ff_list A named list  of flowFrames, indexed by the "File" column of df.
 #' @param make_flowset Logical; if TRUE, convert subset to a flowSet before applying the function.
 #' @param fun Function to apply on each group. Default: `flowsom_repeatsubsampling`.
 #' The function should accept a flowSet and an output directory as first two arguments.
