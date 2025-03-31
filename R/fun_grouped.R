@@ -113,8 +113,8 @@ fun_grouped <- function(
 
             # Apply the user-specified function
             res <- fun(
-                fs_subset,
-                current_outdir,
+                ff_list = fs_subset,
+                outdir = current_outdir,
                 ...
             )
             if (!return_results) {
