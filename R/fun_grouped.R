@@ -5,7 +5,7 @@
 #' Each grouping results in a separate function call, which can be useful
 #' for training models per sample, supersample, or condition.
 #'
-#' @param gated_ff A named list or vector of flowFrames, indexed by the "File" column of df.
+#' @param ff_list A named list or vector of flowFrames, indexed by the "File" column of df.
 #' @param make_flowset Logical; if TRUE, convert subset to a flowSet before applying the function.
 #' @param fun Function to apply on each group. Default: `flowsom_repeatsubsampling`.
 #' The function should accept a flowSet and an output directory as first two arguments.
@@ -27,7 +27,7 @@
 #' }
 #' @export
 fun_grouped <- function(
-    gated_ff,
+    ff_list,
     make_flowset = TRUE,
     fun = flowsom_repeatsubsampling,
     df,
@@ -94,7 +94,7 @@ fun_grouped <- function(
             }
 
             # Extract flowFrames by file names
-            fs_subset <- gated_ff[df_subset[["File"]]]
+            fs_subset <- ff_list[df_subset[["File"]]]
 
             # Optionally convert to a flowSet
             if (make_flowset) {
