@@ -37,7 +37,11 @@ fun_grouped <- function(
     dfcol_othergroups = NULL,
     outdir_base = NULL,
     verbose = FALSE,
+    return_results = TRUE,
     ...) {
+    if (!return_results && is.null(outdir_base)) {
+        stop("If return_results is FALSE, outdir_base must be specified and the function should save the results there.")
+    }
     # Get all unique combinations of the specified grouping columns
     possible_groupings <- df |>
         dplyr::select(
@@ -48,17 +52,16 @@ fun_grouped <- function(
         ) |>
         dplyr::distinct()
 
-    all_results <- list()
-
     # Iterate through each group and apply the analysis function
     all_results <- future.apply::future_lapply(
         seq_len(nrow(possible_groupings)),
         future.seed = TRUE,
+        future.conditions = "message",
         function(grouping_i) {
             grouping_x <- possible_groupings[grouping_i, ]
 
             if (verbose) {
-                cat(
+                message(
                     "Processing grouping: ",
                     paste0(names(grouping_x), ".", grouping_x, collapse = "___"),
                     "\n"
@@ -109,13 +112,19 @@ fun_grouped <- function(
             }
 
             # Apply the user-specified function
-            return(
-                fun(
-                    fs_subset,
-                    current_outdir,
-                    ...
-                )
+            res <- fun(
+                fs_subset,
+                current_outdir,
+                ...
             )
+            if (!return_results) {
+                # if return_results is FALSE, set res to NULL
+                # to avoid returning the results of the function
+                # This is useful if the function returns a large object which is
+                # SAVED within the function!
+                res <- NULL
+            }
+            return(res)
         }
     )
 
