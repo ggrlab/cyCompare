@@ -11,7 +11,7 @@ flowsom_repeatsubsampling_apply <- function(
     n_subsampling = 1, # Number of subsamplings
     n_subsampled_cells = 10000, # Number of cells to be subsampled (up or downsampling automatically)
     subsampling_seed_first = 427764,
-    keep_clustered_cells = FALSE,
+    remove_results_keywords = c("flowsom_newdata", "cells_clusters_from_train"),
     ...) {
     # Subsample the data
     subsample_multiple <- unlist(
@@ -57,8 +57,8 @@ flowsom_repeatsubsampling_apply <- function(
         }
         x
     })
-    if (!keep_clustered_cells) {
-        fs_full_predictedFS[["cells_clusters_from_train"]] <- NULL
+    for (kw_x in remove_results_keywords) {
+        fs_full_predictedFS[[kw_x]] <- NULL
     }
     if (exists(outdir)) {
         flowsom_wrapper_saving(
@@ -67,6 +67,18 @@ flowsom_repeatsubsampling_apply <- function(
             modelname = basename(outdir)
         )
     }
+    fs_full_predictedFS <- lapply(fs_full_predictedFS, function(x) {
+        lapply(x, function(y) {
+            if ("sample" %in% colnames(y)) {
+                y <- dplyr::mutate(
+                    y, 
+                    File = sub("_subsampled[0-9]+$", "", sample), 
+                    .before = "sample"
+                )
+            }
+            return(y)
+        })
+    })
 
     return(fs_full_predictedFS)
 }
