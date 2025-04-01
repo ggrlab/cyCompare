@@ -7,7 +7,7 @@ flowsom_repeatsubsampling_apply <- function(
     ff_list,
     outdir,
     flowsom_result,
-    n_metacluster = 10,
+    n_metacluster = NULL,
     n_subsampling = 1, # Number of subsamplings
     n_subsampled_cells = 10000, # Number of cells to be subsampled (up or downsampling automatically)
     subsampling_seed_first = 427764,
