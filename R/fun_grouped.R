@@ -5,7 +5,9 @@
 #' Each grouping results in a separate function call, which can be useful
 #' for training models per sample, supersample, or condition.
 #'
-#' @param ff_list A named list  of flowFrames, indexed by the "File" column of df.
+#' @param data
+#' The data which should be subset. E.g.
+#'  - A named list of flowFrames, indexed by the "File" column of df.
 #' @param make_flowset Logical; if TRUE, convert subset to a flowSet before applying the function.
 #' @param fun Function to apply on each group. Default: `flowsom_repeatsubsampling`.
 #' The function should accept a flowSet and an output directory as first two arguments.
@@ -27,7 +29,7 @@
 #' }
 #' @export
 fun_grouped <- function(
-    ff_list,
+    data,
     make_flowset = TRUE,
     fun = flowsom_repeatsubsampling,
     df,
@@ -38,6 +40,9 @@ fun_grouped <- function(
     outdir_base = NULL,
     verbose = FALSE,
     return_results = TRUE,
+    subset_fun = function(data, elements) {
+        data[elements]
+    },
     ...) {
     if (!return_results && is.null(outdir_base)) {
         stop("If return_results is FALSE, outdir_base must be specified and the function should save the results there.")
@@ -94,26 +99,26 @@ fun_grouped <- function(
             }
 
             # Extract flowFrames by file names
-            fs_subset <- ff_list[df_subset[["File"]]]
+            data_subset <- subset_fun(data, df_subset[["File"]])
 
             # Optionally convert to a flowSet
             if (make_flowset) {
-                fs_subset <- flowCore::flowSet(fs_subset)
+                data_subset <- flowCore::flowSet(data_subset)
             }
 
             # Sanity check: make sure the number of files matches
-            if (length(fs_subset) != nrow(df_subset)) {
+            if (length(data_subset) != nrow(df_subset)) {
                 stop(
-                    "Some files are missing from the fs_subset set. ",
+                    "Some files are missing from the data_subset set. ",
                     "I wanted to load ", nrow(df_subset),
-                    " files, but only found ", length(fs_subset),
+                    " files, but only found ", length(data_subset),
                     ". Files are loaded by their names ('File' column in df)."
                 )
             }
 
             # Apply the user-specified function
             res <- fun(
-                ff_list = fs_subset,
+                data_subset,
                 outdir = current_outdir,
                 ...
             )

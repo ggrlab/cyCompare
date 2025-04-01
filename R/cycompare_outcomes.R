@@ -40,6 +40,7 @@ cycompare_outcomes <- function(
     dfcol_train_validation_other = "tvt",
     dfcol_outcomes = c("outcome_1", "outcome_2"),
     outcome_models = list("glmnet" = glmnet::cv.glmnet),
+    outdir_base = tempdir(),
     transformList = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
@@ -52,7 +53,6 @@ cycompare_outcomes <- function(
     clustering_n_subsampling = 1, # Number of subsamplings
     clustering_n_subsampled_cells = 1e4, # Number of cells to be subsampled (up or downsampling automatically) for FlowSOM
     clustering_subsampling_seed_first = 42, # Seed for the first subsampling
-    clustering_outdir = tempdir(), # Directory to save FlowSOM results
     kwargs_flowsom = list(
         nClus = 5,
         scale = FALSE,
@@ -121,7 +121,7 @@ cycompare_outcomes <- function(
         fun_grouped,
         c(
             list(
-                ff_list = gated_transformed_ff,
+                data = gated_transformed_ff,
                 fun = flowsom_repeatsubsampling,
                 df = df |> dplyr::filter(
                     # Clustering should only be trained on the TRAINING set samples
@@ -130,7 +130,7 @@ cycompare_outcomes <- function(
                 dfcol_grouping_supersamples = dfcol_grouping_supersamples,
                 dfcol_grouping_samples = dfcol_grouping_samples,
                 dfcol_train_validation_other = dfcol_train_validation_other,
-                outdir_base = clustering_outdir,
+                outdir_base = file.path(outdir_base, "clustering"),
                 verbose = TRUE,
                 # FlowSOM parameters
                 columns_clustering = ff_columns_relevant,
@@ -146,15 +146,96 @@ cycompare_outcomes <- function(
 
     ### Apply clustering to all samples
     applied_fs <- fun_grouped_apply(
-        ff_list = gated_transformed_ff,
+        data = gated_transformed_ff,
         fun = flowsom_repeatsubsampling_apply,
         result_grouping = clusterings_ontrain,
-        outdir_base = paste0(clustering_outdir, "_applied"),
+        outdir_base = file.path(outdir_base, "clustering_applied"),
         verbose = FALSE,
         return_results = TRUE,
+        remove_results_keywords = c("flowsom_newdata", "cells_clusters_from_train")
+
+        # if n_metacluster is not provided, it will be taken from the FlowSOM result
+        # n_metacluster = kwargs_flowsom[["nClus"]]
     )
 
     browser()
 
+    # options(
+    #     future.globals.maxSize = 10 * 1024^3
+    # )
+    pacman::p_load("mlr3learners")
+
+    models_fs <- fun_grouped_apply(
+        data = df,
+        result_grouping = applied_fs,
+        make_flowset = FALSE,
+        fun = modelling,
+        outdir_base = file.path(outdir_base, "models"),
+        verbose = FALSE,
+        return_results = TRUE,
+        dfcol_train_validation_other = dfcol_train_validation_other,
+        dfcol_outcomes = dfcol_outcomes,
+        hparam_n_evaluations = 3,
+        seed = 42,
+        learners_classification = list(
+            mlr3::lrn(
+                "classif.ranger",
+                predict_type = "prob", predict_sets = c("train", "test"),
+                max.depth = paradox::to_tune(2, 20), # minimum and maximum depth
+                num.trees = paradox::to_tune(c(500, 1000, 1500, 2000)),
+                importance = "impurity"
+            )
+        ),
+        dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
+        loss_measure = mlr3::msr("classif.logloss")
+    )
+
     return()
+}
+
+modelling <- function(
+    df,
+    outdir,
+    result_grouping,
+    grouping,
+    dfcol_train_validation_other,
+    dfcol_outcomes,
+    hparam_n_evaluations = 3,
+    seed = 42,
+    learners_classification = list(
+        mlr3::lrn(
+            "classif.ranger",
+            predict_type = "prob", predict_sets = c("train", "test"),
+            max.depth = paradox::to_tune(2, 20), # minimum and maximum depth
+            num.trees = paradox::to_tune(c(500, 1000, 1500, 2000)),
+            importance = "impurity"
+        )
+    ),
+    dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
+    loss_measure = mlr3::msr("classif.logloss"),
+    ...) {
+    grouping_noTVT <- grouping |> dplyr::select(-tidyr::all_of(dfcol_train_validation_other))
+    df_in_group <- dplyr::left_join(
+        grouping_noTVT,
+        df,
+        by = colnames(grouping_noTVT)
+    )
+    tmp_df <- result_grouping[["proportions_per_x"]][["metaCluster"]]
+    df_in_group_pheno_values <- dplyr::left_join(df_in_group, tmp_df, by = "File")
+    modelx <- cytobench::wrapper_count_models(
+        # modelx <- wrapper_count_models(
+        df_list = list("metaCluster" = df_in_group_pheno_values),
+        tvt_col = dfcol_train_validation_other,
+        outdir = outdir,
+        dvs_potential = dfcol_outcomes,
+        dvs_multiclass = c(),
+        ivs_regex = "[cC]luster_",
+        hparam_n_evaluations = hparam_n_evaluations,
+        seed = seed,
+        learners_classification = learners_classification,
+        dv_class_positive = dv_class_positive,
+        measures = loss_measure,
+        hpoptimized_final_trainsets = c("train"),
+    )
+    return(modelx)
 }
