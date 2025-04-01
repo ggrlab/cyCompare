@@ -13,6 +13,7 @@ cycompare_outcomes(
   dfcol_train_validation_other = "tvt",
   dfcol_outcomes = c("outcome_1", "outcome_2"),
   outcome_models = list(glmnet = glmnet::cv.glmnet),
+  outdir_base = tempdir(),
   transformList = function(x) asinh(x/1000),
   gatingsets,
   gatename_primary,
@@ -24,8 +25,12 @@ cycompare_outcomes(
   clustering_n_subsampling = 1,
   clustering_n_subsampled_cells = 10000,
   clustering_subsampling_seed_first = 42,
-  clustering_outdir = tempdir(),
   kwargs_flowsom = list(nClus = 5, scale = FALSE, xdim = 3, ydim = 3, seed = 3711283),
+  kwargs_modelling = list(hparam_n_evaluations = 3, seed = 42, learners_classification =
+    list(mlr3::lrn("classif.ranger", predict_type = "prob", predict_sets = c("train",
+    "test"), max.depth = paradox::to_tune(2, 20), num.trees = paradox::to_tune(c(500,
+    1000, 1500, 2000)), importance = "impurity")), dv_class_positive = c(outcome_1 = "A",
+    outcome_2 = 5.1), loss_measure = mlr3::msr("classif.logloss")),
   ...
 )
 }

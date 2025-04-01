@@ -2,13 +2,13 @@
 % Please edit documentation in R/fun_grouped_apply.R
 \name{fun_grouped_apply}
 \alias{fun_grouped_apply}
-\title{Apply a Function to Grouped Flow Cytometry Data}
+\title{Apply a Function to Predefined Groupings of Flow Cytometry Data}
 \usage{
 fun_grouped_apply(
-  ff_list,
+  data,
   result_grouping,
   make_flowset = TRUE,
-  fun = flowsom_repeatsubsampling,
+  fun = flowsom_repeatsubsampling_apply,
   outdir_base = NULL,
   verbose = FALSE,
   return_results = TRUE,
@@ -16,41 +16,35 @@ fun_grouped_apply(
 )
 }
 \arguments{
-\item{ff_list}{A named list of flowFrames, indexed by the "File" column of df.}
+\item{data}{The data which should be subset. E.g.
+\itemize{
+\item A named list of flowFrames, indexed by the "File" column of df.
+}}
 
-\item{make_flowset}{Logical; if TRUE, convert subset to a flowSet before applying the function.}
+\item{result_grouping}{A list returned from \code{fun_grouped()} that contains \code{groups} and optionally \code{results}.}
 
-\item{fun}{Function to apply on each group. Default: \code{flowsom_repeatsubsampling}.
-The function should accept a flowSet and an output directory as first two arguments.}
+\item{make_flowset}{Logical; if TRUE, convert \code{ff_list} into a \code{flowSet}. Default is TRUE.}
 
-\item{outdir_base}{Character (optional); base directory for writing outputs. The output directory for each group will be
-created by combining \code{outdir_base} with the grouping names. E.g.
-\code{outdir_base/columnA.valueA___columnB.valueB}.}
+\item{fun}{A function to apply to each group. It should accept at least arguments \code{ff_list}, \code{outdir}, and a grouping-specific input (e.g., \code{result_grouping[["results"]][[i]]}).}
 
-\item{verbose}{Logical; print progress messages.}
+\item{outdir_base}{Optional string path to save results. Required if \code{return_results} is FALSE.}
+
+\item{verbose}{Logical; if TRUE, prints progress messages.}
+
+\item{return_results}{Logical; if FALSE, the function does not return results and assumes side effects (e.g., saving to disk).}
 
 \item{...}{Additional arguments passed to \code{fun}.}
-
-\item{df}{Data frame containing all following \code{dfcol_XXX} and \code{File} column.}
-
-\item{dfcol_grouping_supersamples}{Character; column name(s) for supersample grouping.}
-
-\item{dfcol_grouping_samples}{Character; column name(s) for sample grouping.}
-
-\item{dfcol_train_validation_other}{Character; column name to distinguish training/validation/other.}
-
-\item{dfcol_othergroups}{Character vector (optional); other metadata columns for grouping.}
 }
 \value{
-A list with two elements:
+A list containing:
 \describe{
-\item{results}{List of outputs returned by \code{fun} for each group.}
-\item{groups}{Data frame of the grouping combinations used.}
+\item{results}{List of results for each grouping, or NULL if \code{return_results} is FALSE.}
+\item{groups}{Data frame of group combinations processed.}
 }
 }
 \description{
-This function applies a specified analysis function (e.g., FlowSOM training)
-to subsets of flow cytometry data defined by unique combinations of df columns.
-Each grouping results in a separate function call, which can be useful
-for training models per sample, supersample, or condition.
+This function applies a user-defined function (e.g., FlowSOM training) to data
+across multiple groupings, typically the result of \code{fun_grouped()}. It allows optional conversion
+to a \code{flowSet}, supports parallel execution, and can either return the results or rely on
+side effects such as file output.
 }

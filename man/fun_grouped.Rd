@@ -5,7 +5,7 @@
 \title{Apply a Function to Grouped Flow Cytometry Data}
 \usage{
 fun_grouped(
-  ff_list,
+  data,
   make_flowset = TRUE,
   fun = flowsom_repeatsubsampling,
   df,
@@ -16,11 +16,17 @@ fun_grouped(
   outdir_base = NULL,
   verbose = FALSE,
   return_results = TRUE,
+  subset_fun = function(data, elements) {
+     data[elements]
+ },
   ...
 )
 }
 \arguments{
-\item{ff_list}{A named list  of flowFrames, indexed by the "File" column of df.}
+\item{data}{The data which should be subset. E.g.
+\itemize{
+\item A named list of flowFrames, indexed by the "File" column of df.
+}}
 
 \item{make_flowset}{Logical; if TRUE, convert subset to a flowSet before applying the function.}
 
