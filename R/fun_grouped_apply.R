@@ -41,7 +41,22 @@ fun_grouped_apply <- function(
     }
 
     # Extract group definitions
-    possible_groupings <- result_grouping[["groups"]]
+    is_result_list <- FALSE
+    if ("groups" %in% names(result_grouping)) {
+        possible_groupings <- result_grouping[["groups"]]
+        result_grouping_results <- result_grouping[["results"]]
+    } else if (all(sapply(result_grouping, function(x) "groups" %in% names(x)))) {
+        # If result_grouping is a list of lists, extract the first element
+        all_groupings <- lapply(result_grouping, function(x) x[["groups"]])
+        if (!all(sapply(all_groupings, function(x) all(x == all_groupings[[1]])))) {
+            stop("All groupings must be identical if a list of grouping results is given.")
+        }
+        possible_groupings <- all_groupings[[1]]
+        result_grouping_results <- lapply(result_grouping, function(x) x[["results"]])
+        is_result_list <- TRUE
+    } else {
+        stop("result_grouping must contain a 'groups' element or be a list of lists with 'groups' elements.")
+    }
     # Optionally convert input list to a flowSet
     if (make_flowset) {
         data <- flowCore::flowSet(data)
@@ -73,12 +88,21 @@ fun_grouped_apply <- function(
                 )
             }
 
+            if (is_result_list) {
+                # Get the result for this grouping
+                result_grouping_results_x <- lapply(result_grouping_results, function(x) {
+                    x[[grouping_i]]
+                })
+            } else {
+                # Get the result for this grouping
+                result_grouping_results_x <- result_grouping_results[[grouping_i]]
+            }
             # Apply the user-defined function to this group
             res <- fun(
                 data,
                 outdir = current_outdir,
                 grouping = grouping_x,
-                result_grouping[["results"]][[grouping_i]],
+                result_grouping_results_x,
                 ...
             )
 

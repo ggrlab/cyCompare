@@ -1,32 +1,36 @@
-#' Compare Flow Cytometry Data Across Devices
+#' Core Analysis of Flow Cytometry Data Across Devices with outcomes
 #'
-#' This function performs a comparative analysis of flow cytometry data across multiple devices.
-#' It includes basic sample statistics, gating, density plots, FlowSOM clustering, and marker intensity comparisons.
+#' This function performs preprocessing, transformation, FlowSOM clustering, and predictive modeling
+#' on flow cytometry data to compare devices and generate outcome-based insights.
+#' It returns intermediate structured data ready for downstream plotting or reporting.
 #'
 #' @param flowframes A named list of `flowFrame` objects containing flow cytometry data.
-#' @param df A `data.table` containing metadata with at least the columns `"File"`, `"Device"`, and `"Sample"`.
-#' @param ff_columns_relevant A character vector specifying the relevant markers for analysis.
-#' @param transformlist A transformation function or a named list of functions for transforming marker intensities
-#'        (default: `asinh(x / 1e3)`).
-#' @param gatingsets A named list of gating sets for each dataset.
-#' @param gatename_primary A character string specifying the primary gating population.
-#' @param n_events_postgate An integer specifying the maximum number of events to keep post-gating.
-#' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
-#' @param device_colors A named vector or function that provides colors for each device.
-#'        If a function is provided, it should take the number of devices as input and return a vector of colors.
-#' @param nClus An integer specifying the number of clusters for FlowSOM clustering (default: 5).
-#' @param scale A logical indicating whether to scale the data in FlowSOM clustering (default: `FALSE`).
-#' @param xdim An integer specifying the x-dimension of the FlowSOM grid (default: 3).
-#' @param ydim An integer specifying the y-dimension of the FlowSOM grid (default: 3).
-#' @param seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
+#' @param df A `data.table` with metadata. Must contain columns specified in `dfcol_*` parameters and `File` as unique column linking to `names(flowframes)`.
+#' @param ff_columns_relevant Character vector of markers to use for analysis and clustering.
+#' @param dfcol_grouping_supersamples Metadata column used to define supersample groups (e.g., "Study").
+#' @param dfcol_grouping_samples Metadata column used to group samples (e.g., "Device").
+#' @param dfcol_train_validation_other Column defining sample roles ("train", "test", etc.).
+#' @param dfcol_outcomes Character vector of column names containing outcome variables.
+#' @param outcome_models Named list of modeling functions, defaulting to `cv.glmnet`.
+#' @param outdir_base Base directory for saving intermediate results (default: `tempdir()`).
+#' @param transformList A transformation function or a `flowCore::transformList` object (default: `asinh(x / 1e3)`).
+#' @param gatingsets A named list of gating sets, one per dataset.
+#' @param gatename_primary Character string indicating the population used for downstream analysis.
+#' @param n_events_postgate Maximum number of events per sample to retain after gating.
+#' @param marker_to_gate Named vector mapping marker names to gate names.
+#' @param device_colors Either a named vector or a function that generates colors for each device.
+#' @param clustering_n_subsampling Number of repeated subsamplings for FlowSOM (default: 1).
+#' @param clustering_n_subsampled_cells Number of cells per sample for FlowSOM (default: 10,000).
+#' @param clustering_subsampling_seed_first Seed for the first subsampling (default: 42).
+#' @param kwargs_flowsom Named list of additional FlowSOM parameters (e.g. `nClus`, `scale`, `xdim`, `ydim`, `seed`).
+#' @param kwargs_modelling Named list of model training parameters (e.g., learners, tuning, seed).
 #'
-#' @return A named list of ggplot2 objects containing:
-#'   \item{"Samples over time per device"}{A plot showing the number of samples collected over time per device.}
-#'   \item{"Counts and percentages"}{Plots of gated cell counts and percentages per sample.}
-#'   \item{"Positive population MFI"}{Plots showing the median fluorescence intensity (MFI) of positive gated populations.}
-#'   \item{"Density plots"}{Density distributions of marker intensities across devices and samples.}
-#'   \item{"Flowsom_PCA"}{Principal Component Analysis (PCA) plots of FlowSOM clustering results.}
-#'   \item{"Flowsom_MA"}{MA plots comparing cluster proportions between devices.}
+#' @return A named list with three main components:
+#' \describe{
+#'   \item{prepared_data}{List with transformed flowFrames, counts, and device colors.}
+#'   \item{clustering}{List with FlowSOM models trained on training data and applied to all samples.}
+#'   \item{models}{List with outcome models trained and applied to clustering results.}
+#' }
 #'
 #' @export
 cycompare_outcomes_analyse <- function(
@@ -48,9 +52,9 @@ cycompare_outcomes_analyse <- function(
         RColorBrewer::brewer.pal(n, "Dark2")
     },
     # FlowSOM parameters
-    clustering_n_subsampling = 1, # Number of subsamplings
-    clustering_n_subsampled_cells = 1e4, # Number of cells to be subsampled (up or downsampling automatically) for FlowSOM
-    clustering_subsampling_seed_first = 42, # Seed for the first subsampling
+    clustering_n_subsampling = 1,
+    clustering_n_subsampled_cells = 1e4,
+    clustering_subsampling_seed_first = 42,
     kwargs_flowsom = list(
         nClus = 5,
         scale = FALSE,
@@ -65,7 +69,7 @@ cycompare_outcomes_analyse <- function(
             mlr3::lrn(
                 "classif.ranger",
                 predict_type = "prob", predict_sets = c("train", "test"),
-                max.depth = paradox::to_tune(2, 20), # minimum and maximum depth
+                max.depth = paradox::to_tune(2, 20),
                 num.trees = paradox::to_tune(c(500, 1000, 1500, 2000)),
                 importance = "impurity"
             )
@@ -73,6 +77,7 @@ cycompare_outcomes_analyse <- function(
         dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
         loss_measure = mlr3::msr("classif.logloss")
     )) {
+    ### 1. Gating and basic preparation
     prepared <- cycompare_preparation(
         flowframes = flowframes,
         df = df,
@@ -86,7 +91,7 @@ cycompare_outcomes_analyse <- function(
     counts_joint <- prepared[["counts_joint"]]
     device_colors <- prepared[["device_colors"]]
 
-    #### Transform the data
+    ### 2.Transformation of flow data
     if (all(is.null(transformList))) {
         transformList <- NULL
     } else if (is.function(transformList)) {
@@ -94,28 +99,35 @@ cycompare_outcomes_analyse <- function(
             from = ff_columns_relevant,
             tfun = transformList
         )
-    } else {
-        # I expect that this is then a proper transformList for flowCore
-        if (!"transformList" %in% class(transformList)) {
-            stop("transformList should be NULL, a function or a transformList object")
-        }
+    } else if (!"transformList" %in% class(transformList)) {
+        stop("transformList should be NULL, a function, or a transformList object")
     }
 
-    if (!all(is.null(transformList))) {
+    if (!is.null(transformList)) {
         gated_transformed_ff <- lapply(gated_ff, function(ff_x) {
             flowCore::transform(ff_x, transformList)
         })
     } else {
         gated_transformed_ff <- gated_ff
     }
-    gated_ff <- NULL
+    gated_ff <- NULL # Clean up memory
 
-    possible_groupings <- df |>
-        dplyr::select(dfcol_grouping_supersamples, dfcol_grouping_samples, dfcol_train_validation_other) |>
-        dplyr::distinct()
-
-
-    ### Clustering
+    # nolint start
+    ### 3.Clustering using FlowSOM on training samples only
+    ## fun_grouped applies "fun" to each unique combination of grouping columns in df
+    # E.g. given that we restrict to "train" samples, with
+    #   dfcol_grouping_supersamples = "Study"
+    #   dfcol_grouping_samples = "Device"
+    # The resulting two groups will be:
+    # # A tibble: 2 x 3
+    #   Study Device   train_validation_test
+    #   <chr> <chr>    <chr>
+    # 1 BAD   aurora   train
+    # 2 BAD   fortessa train
+    #
+    # Apart from this "groups" return element, the "result" element is a list corresponding
+    # to the groups in order of the [["groups"]] tibble.
+    # nolint end
     clusterings_ontrain <- do.call(
         fun_grouped,
         c(
@@ -123,7 +135,6 @@ cycompare_outcomes_analyse <- function(
                 data = gated_transformed_ff,
                 fun = flowsom_repeatsubsampling,
                 df = df |> dplyr::filter(
-                    # Clustering should only be trained on the TRAINING set samples
                     !!rlang::sym(dfcol_train_validation_other) == "train"
                 ),
                 dfcol_grouping_supersamples = dfcol_grouping_supersamples,
@@ -131,19 +142,19 @@ cycompare_outcomes_analyse <- function(
                 dfcol_train_validation_other = dfcol_train_validation_other,
                 outdir_base = file.path(outdir_base, "clustering"),
                 verbose = TRUE,
-                # FlowSOM parameters
                 columns_clustering = ff_columns_relevant,
-                n_subsampling = clustering_n_subsampling, # Number of subsamplings
-                n_subsampled_cells = clustering_n_subsampled_cells, # Number of cells to be subsampled (up or downsampling automatically)
+                n_subsampling = clustering_n_subsampling,
+                n_subsampled_cells = clustering_n_subsampled_cells,
                 subsampling_seed_first = clustering_subsampling_seed_first,
-                # Do not transform the data within FlowSOM, it has been transformed already!
-                transform = FALSE
+                transform = FALSE # Already transformed
             ),
             kwargs_flowsom
         )
     )
 
-    ### Apply clustering to all samples
+    ### 4.Apply trained clustering model to all samples
+    # The results given in "results_grouping" are applied to _all_ the `data` in fun_grouped_apply.
+    # Effectively, all trained FlowSOM models are going to be applied to all samples in gated_transformed_ff.
     applied_fs <- fun_grouped_apply(
         data = gated_transformed_ff,
         fun = flowsom_repeatsubsampling_apply,
@@ -152,14 +163,16 @@ cycompare_outcomes_analyse <- function(
         verbose = FALSE,
         return_results = TRUE,
         remove_results_keywords = c("flowsom_newdata", "cells_clusters_from_train")
-
-        # if n_metacluster is not provided, it will be taken from the FlowSOM result
-        # n_metacluster = kwargs_flowsom[["nClus"]]
     )
 
-    # Use the clustered proportions to generate a model per grouping.
-    # models_grouped() uses ONLY result_grouping[["proportions_per_x"]][["metaCluster"]]
-    # hardcoded for now.
+    # nolint start
+    ### 5.Train outcome models on clustered training data
+    # The results given in "results_grouping" are applied to _all_ the `data` in fun_grouped_apply.
+    # models_grouped()
+    #   - restricts df to the matching groups.
+    #   - merges the df with the clustering results by group
+    #   - trains models using the with cytobench::wrapper_count_models. This also ensures proper training/validation/test USAGE, not SPLITTING!
+    # nolint end
     model_fs <- do.call(
         fun_grouped_apply,
         c(
@@ -178,6 +191,11 @@ cycompare_outcomes_analyse <- function(
         )
     )
 
+    ### 6. Apply each trained models to all samples
+    # The results given in "results_grouping" are applied to _all_ the `data` in fun_grouped_apply.
+    # If result_grouping is a list of elements, `fun` receives the grouping-specific data 
+    # from EACH element of the list.
+    # Because "bygroup" is set to FALSE, the function will be applied to the entire `df`.
     model_fs_applied <- do.call(
         fun_grouped_apply,
         c(
@@ -193,12 +211,14 @@ cycompare_outcomes_analyse <- function(
                 verbose = FALSE,
                 return_results = TRUE,
                 dfcol_train_validation_other = dfcol_train_validation_other,
-                dfcol_outcomes = dfcol_outcomes
+                dfcol_outcomes = dfcol_outcomes,
+                bygroup = FALSE
             ),
             kwargs_modelling
         )
     )
 
+    ### 7.Return structured results for downstream use
     return(
         list(
             "prepared_data" = list(
