@@ -19,7 +19,6 @@
 #' @param xdim An integer specifying the x-dimension of the FlowSOM grid (default: 3).
 #' @param ydim An integer specifying the y-dimension of the FlowSOM grid (default: 3).
 #' @param seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
-#' @param ... Additional parameters passed to `plot_flowsom()`.
 #'
 #' @return A named list of ggplot2 objects containing:
 #'   \item{"Samples over time per device"}{A plot showing the number of samples collected over time per device.}
@@ -30,8 +29,7 @@
 #'   \item{"Flowsom_MA"}{MA plots comparing cluster proportions between devices.}
 #'
 #' @export
-
-cycompare_outcomes <- function(
+cycompare_outcomes_analyse <- function(
     flowframes,
     df,
     ff_columns_relevant,
@@ -74,8 +72,7 @@ cycompare_outcomes <- function(
         ),
         dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
         loss_measure = mlr3::msr("classif.logloss")
-    ),
-    ...) {
+    )) {
     prepared <- cycompare_preparation(
         flowframes = flowframes,
         df = df,
@@ -116,19 +113,6 @@ cycompare_outcomes <- function(
     possible_groupings <- df |>
         dplyr::select(dfcol_grouping_supersamples, dfcol_grouping_samples, dfcol_train_validation_other) |>
         dplyr::distinct()
-    possible_groupings_training <- possible_groupings |>
-        dplyr::filter(!!rlang::sym(dfcol_train_validation_other) == "train")
-
-
-
-    # #### 1. Basic plots
-    # ## 1.1 Outcomes per study
-    # p1.1 <- plot_outcome_circles(
-    #     df,
-    #     dfcol_grouping_supersamples = dfcol_grouping_supersamples,
-    #     dfcol_outcomes = dfcol_outcomes
-    # )
-
 
 
     ### Clustering
@@ -173,38 +157,9 @@ cycompare_outcomes <- function(
         # n_metacluster = kwargs_flowsom[["nClus"]]
     )
 
-    browser()
-
-    # options(
-    #     future.globals.maxSize = 10 * 1024^3
-    # )
-    pacman::p_load("mlr3learners")
-
-    models_fs <- fun_grouped_apply(
-        data = df,
-        result_grouping = applied_fs,
-        make_flowset = FALSE,
-        fun = modelling,
-        outdir_base = file.path(outdir_base, "models"),
-        verbose = FALSE,
-        return_results = TRUE,
-        dfcol_train_validation_other = dfcol_train_validation_other,
-        dfcol_outcomes = dfcol_outcomes,
-        hparam_n_evaluations = 3,
-        seed = 42,
-        learners_classification = list(
-            mlr3::lrn(
-                "classif.ranger",
-                predict_type = "prob", predict_sets = c("train", "test"),
-                max.depth = paradox::to_tune(2, 20), # minimum and maximum depth
-                num.trees = paradox::to_tune(c(500, 1000, 1500, 2000)),
-                importance = "impurity"
-            )
-        ),
-        dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
-        loss_measure = mlr3::msr("classif.logloss")
-    )
-
+    # Use the clustered proportions to generate a model per grouping.
+    # models_grouped() uses ONLY result_grouping[["proportions_per_x"]][["metaCluster"]]
+    # hardcoded for now.
     model_fs <- do.call(
         fun_grouped_apply,
         c(
@@ -222,6 +177,43 @@ cycompare_outcomes <- function(
             kwargs_modelling
         )
     )
-    return()
-}
 
+    model_fs_applied <- do.call(
+        fun_grouped_apply,
+        c(
+            list(
+                data = df,
+                result_grouping = list(
+                    "clustering" = applied_fs,
+                    "models" = model_fs
+                ),
+                make_flowset = FALSE,
+                fun = models_grouped_apply,
+                outdir_base = file.path(outdir_base, "models_applied"),
+                verbose = FALSE,
+                return_results = TRUE,
+                dfcol_train_validation_other = dfcol_train_validation_other,
+                dfcol_outcomes = dfcol_outcomes
+            ),
+            kwargs_modelling
+        )
+    )
+
+    return(
+        list(
+            "prepared_data" = list(
+                "gated_transformed_ff" = gated_transformed_ff,
+                "counts_joint" = counts_joint,
+                "device_colors" = device_colors
+            ),
+            "clustering" = list(
+                "trained" = clusterings_ontrain,
+                "applied" = applied_fs
+            ),
+            "models" = list(
+                "trained" = model_fs,
+                "applied" = model_fs_applied
+            )
+        )
+    )
+}
