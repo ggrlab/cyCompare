@@ -1,5 +1,5 @@
 plot_ROC_grouped <- function(
-    results_cycompare_analyse,
+    calced_roc, 
     dfcol_grouping_supersamples = c("Study"),
     dfcol_grouping_samples = "Device",
     dfcol_outcomes = c("outcome_1", "outcome_2"),
@@ -10,21 +10,6 @@ plot_ROC_grouped <- function(
         "Cytoflex" = "#00FF00",
         "Aurora" = "#0000FF"
     )) {
-    calced_roc <- fun_grouped_apply(
-        data = NULL,
-        result_grouping = results_cycompare_analyse[["models"]][["applied"]],
-        make_flowset = FALSE,
-        fun = calc_ROC_grouped,
-        outdir_base = NULL,
-        verbose = FALSE,
-        return_results = TRUE,
-        dfcol_grouping_supersamples = dfcol_grouping_supersamples,
-        dfcol_grouping_samples = dfcol_grouping_samples,
-        dfcol_outcomes = dfcol_outcomes,
-        dfcol_train_validation_other = dfcol_train_validation_other,
-        dv_class_positive = dv_class_positive,
-        bygroup = TRUE
-    )
 
     roc_plots_df_total <- tibble::tibble()
     for (group_trained_on_i in seq_len(nrow(calced_roc[["groups"]]))) {
