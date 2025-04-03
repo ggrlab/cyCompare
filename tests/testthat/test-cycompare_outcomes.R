@@ -136,23 +136,33 @@ test_that("CyCompare Badalona samples, outcomes", {
     )
 
 
-    # options(
-    #     future.globals.maxSize = 10 * 1024^3
-    # )
     pacman::p_load("mlr3learners")
 
-    result_analysis <- cycompare_outcomes_analyse(
-        flowframes = ff_list_downsampled,
-        ff_columns_relevant = names(relevant_mn),
+    # result_analysis <- cycompare_outcomes_analyse(
+    #     flowframes = ff_list_downsampled,
+    #     ff_columns_relevant = names(relevant_mn),
+    #     df = df_complete_v2,
+    #     dfcol_grouping_supersamples = c("Study"),
+    #     dfcol_grouping_samples = "Device",
+    #     dfcol_outcomes = c("outcome_1", "outcome_2"),
+    #     outcome_models = list("glmnet" = glmnet::cv.glmnet),
+    #     n_events_postgate = 1e4,
+    #     gatingsets = gslist,
+    #     gatename_primary = "/Singlets/CD45+/CD3+",
+    #     marker_to_gate = marker_to_gate,
+    #     dfcol_train_validation_other = "train_validation_test",
+    #     outdir_base = "intermediate/clustering"
+    # )
+    # qs::qsave(result_analysis, "intermediate/result_analysis.qs")
+    result_analysis <- qs::qread("intermediate/result_analysis.qs")
+    # names(result_analysis[["models"]][["applied"]])
+    # result_analysis[["models"]][["applied"]]
+    cycompare_outcomes_plot(
         df = df_complete_v2,
+        dfcol_grouping_supersamples = c("Study"),
+        dfcol_grouping_samples = "Device",
         dfcol_outcomes = c("outcome_1", "outcome_2"),
-        outcome_models = list("glmnet" = glmnet::cv.glmnet),
-        n_events_postgate = 1e4,
-        gatingsets = gslist,
-        gatename_primary = "/Singlets/CD45+/CD3+",
-        marker_to_gate = marker_to_gate,
-        dfcol_train_validation_other = "train_validation_test",
-        clustering_outdir = "intermediate/clustering"
+        results_cycompare_analyse = result_analysis
     )
     browser()
     pdf("removeme.pdf", width = 20)

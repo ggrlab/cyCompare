@@ -74,9 +74,9 @@ cycompare_outcomes_analyse <- function(
                 importance = "impurity"
             )
         ),
-        dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
         loss_measure = mlr3::msr("classif.logloss")
-    )) {
+    ),
+    dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1)) {
     ### 1. Gating and basic preparation
     prepared <- cycompare_preparation(
         flowframes = flowframes,
@@ -185,7 +185,8 @@ cycompare_outcomes_analyse <- function(
                 verbose = FALSE,
                 return_results = TRUE,
                 dfcol_train_validation_other = dfcol_train_validation_other,
-                dfcol_outcomes = dfcol_outcomes
+                dfcol_outcomes = dfcol_outcomes,
+                dv_class_positive = dv_class_positive
             ),
             kwargs_modelling
         )
@@ -193,7 +194,7 @@ cycompare_outcomes_analyse <- function(
 
     ### 6. Apply each trained models to all samples
     # The results given in "results_grouping" are applied to _all_ the `data` in fun_grouped_apply.
-    # If result_grouping is a list of elements, `fun` receives the grouping-specific data 
+    # If result_grouping is a list of elements, `fun` receives the grouping-specific data
     # from EACH element of the list.
     # Because "bygroup" is set to FALSE, the function will be applied to the entire `df`.
     model_fs_applied <- do.call(
