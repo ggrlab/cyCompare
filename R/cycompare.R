@@ -68,11 +68,14 @@ cycompare <- function(
         gatingsets = gatingsets,
         gatename_primary = gatename_primary,
         n_events_postgate = n_events_postgate,
-        seed = postgate_sample_seed
+        seed = postgate_sample_seed,
+        marker_to_gate = marker_to_gate
     )
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
     device_colors <- prepared[["device_colors"]]
+    marker_to_gate <- prepared[["marker_to_gate"]]
+    gatename_primary <- prepared[["gatename_primary"]]
 
     #### 1. Basic plots
     ## 1.1 Samples over time per device

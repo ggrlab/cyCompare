@@ -22,17 +22,17 @@
 #' }
 #'
 #' @export
-cycompare_preparation <- function(
-    flowframes,
-    df,
-    ff_columns_relevant,
-    device_colors = function(n) {
-        RColorBrewer::brewer.pal(n, "Dark2")
-    },
-    gatingsets,
-    gatename_primary,
-    n_events_postgate = 10e3,
-    seed = 42) {
+cycompare_preparation <- function(flowframes,
+                                  df,
+                                  ff_columns_relevant,
+                                  device_colors = function(n) {
+                                      RColorBrewer::brewer.pal(n, "Dark2")
+                                  },
+                                  gatingsets,
+                                  gatename_primary,
+                                  marker_to_gate = NULL,
+                                  n_events_postgate = 10e3,
+                                  seed = 42) {
     # Identify all unique devices in metadata
     unique_devices <- unique(df[["Device"]])
 
@@ -48,6 +48,25 @@ cycompare_preparation <- function(
             warning(paste0(device_colors, collapse = ", "))
         } else {
             stop("device_colors must be a named vector or a function(number_of_devices)")
+        }
+    }
+    if (all(is.null(gatingsets))) {
+        gatingsets <- sapply(
+            names(flowframes),
+            simplify = FALSE,
+            function(x) {
+                tmpfile <- cytobench::write_memory_FCS(
+                    flowframes[[x]][1, ]
+                )
+
+                empty_gs <- flowWorkspace::GatingSet(flowCore::flowSet(flowframes[[x]][1, ]))
+                return(empty_gs)
+            }
+        )
+        gatename_primary <- "root"
+        if (!all(is.null(marker_to_gate))) {
+            # Now now gates exist, so marker_to_gate can only be "root" for all markers
+            marker_to_gate[TRUE] <- "root"
         }
     }
 
@@ -95,7 +114,9 @@ cycompare_preparation <- function(
         list(
             gated_ff = gated_ff,
             counts_joint = counts_joint,
-            device_colors = device_colors
+            device_colors = device_colors,
+            marker_to_gate = marker_to_gate,
+            gatename_primary = gatename_primary
         )
     )
 }

@@ -10,3 +10,4 @@ library(testthat)
 library(cyCompare)
 
 test_check("cyCompare")
+
