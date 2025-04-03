@@ -7,5 +7,5 @@
 ^cran-comments\.md$
 ^cyCompare\.Rproj$
 ^docs$
-^pkgdown$
 ^example_data$
+^pkgdown$
