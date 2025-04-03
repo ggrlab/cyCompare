@@ -11,13 +11,15 @@ cycompare(
   transformlist = function(x) asinh(x/1000),
   gatingsets,
   gatename_primary,
-  max_events_postgate = 10000,
+  n_events_postgate = 10000,
+  postgate_sample_seed = 42,
   marker_to_gate,
-  outcome_columns_df,
-  outcome_models,
   device_colors = function(n) {
      RColorBrewer::brewer.pal(n, "Dark2")
  },
+  OTD_kwargs_loss = list(loss = lossfun_hist, verbose = FALSE, write_intermediate =
+    FALSE, should_skip = function(i, j) FALSE, take_time = FALSE, return_as_matrix =
+    TRUE),
   nClus = 5,
   scale = FALSE,
   xdim = 3,
@@ -39,13 +41,9 @@ cycompare(
 
 \item{gatename_primary}{A character string specifying the primary gating population.}
 
-\item{max_events_postgate}{An integer specifying the maximum number of events to keep post-gating.}
+\item{n_events_postgate}{An integer specifying the maximum number of events to keep post-gating.}
 
 \item{marker_to_gate}{A named vector mapping marker names to their corresponding gates.}
-
-\item{outcome_columns_df}{A \code{data.table} containing outcome variables for prediction (not currently used).}
-
-\item{outcome_models}{A list of models for outcome prediction (not currently used).}
 
 \item{device_colors}{A named vector or function that provides colors for each device.
 If a function is provided, it should take the number of devices as input and return a vector of colors.}

@@ -1,4 +1,3 @@
-devtools::load_all()
 test_that("CyCompare Badalona samples", {
     ## Preparation of a proper dataset
     ff_files <- list.files("example_data/2025-03-17_BAD", recursive = TRUE, full.names = TRUE)
@@ -75,9 +74,7 @@ test_that("CyCompare Badalona samples", {
         flowframes = ff_list_downsampled,
         ff_columns_relevant = names(relevant_mn),
         df = df,
-        max_events_postgate = 1e4,
-        outcome_columns_df = c("outcome_1", "outcome_2"),
-        outcome_models = list("glmnet" = glmnet::cv.glmnet),
+        n_events_postgate = 1e4,
         gatingsets = gslist,
         gatename_primary = "/Singlets/CD45+/CD3+",
         marker_to_gate = marker_to_gate
