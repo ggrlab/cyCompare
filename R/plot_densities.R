@@ -11,7 +11,7 @@
 #' @return A `ggplot2` object showing the density distributions of markers across samples and devices.
 #'
 #' @export
-plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500) {
+plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500, dfcol_grouping_samples = "Device") {
     relevant_columns <- flowCore::colnames(ff_gated[[1]])
 
 
@@ -37,14 +37,14 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         data.table::data.table(x = d$x, y = d$y)
     }
     densities <- gated_dt[, compute_density(value, transformlist[[variable[[1]]]]), by = .(File, variable)]
-    densities <- densities[df[, c("File", "Device", "Sample")], on = "File"]
+    densities <- densities[df[, c("File", dfcol_grouping_samples[[1]], "Sample")], on = "File"]
     p0 <- ggplot2::ggplot(
         densities,
-        ggplot2::aes(x = x, y = y, color = Device)
+        ggplot2::aes(x = x, y = y, color = !!rlang::sym(dfcol_grouping_samples[[1]]))
     ) +
         ggplot2::geom_line() +
         # ggplot2::geom_area(ggplot2::aes(fill = Device), alpha = 0.2) +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = 0, ymax = y, fill = Device), alpha = 0.2) +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = 0, ymax = y, fill = !!rlang::sym(dfcol_grouping_samples[[1]])), alpha = 0.2) +
         # ggplot2::facet_grid(Sample~variable, scales = "free") +
         ggh4x::facet_grid2(Sample ~ variable, scales = "free_y", independent = "y") +
         # ggh4x::facet_grid2(Sample~variable, scales = "free",independent = "x") +

@@ -32,9 +32,29 @@ cycompare_preparation <- function(flowframes,
                                   gatename_primary,
                                   marker_to_gate = NULL,
                                   n_events_postgate = 10e3,
-                                  seed = 42) {
+                                  seed = 42,
+                                  dfcol_grouping_samples = "Device") {
+    mandatory_df_cols <- c("File", "SuperSample", "Sample", dfcol_grouping_samples[[1]], "Time")
+    if (!all(mandatory_df_cols %in% colnames(df))) {
+        tmp <- paste0(
+            "df must contain the following columns: ",
+            paste(mandatory_df_cols, collapse = ", "), ". Missing:",
+            paste(mandatory_df_cols[!mandatory_df_cols %in% colnames(df)], collapse = ", ")
+        )
+        stop(tmp)
+    }
+    if (length(dfcol_grouping_samples) > 1) {
+        warning(
+            "dfcol_grouping_samples is more than one element, colors will be assigned according to the FIRST element only: ",
+            dfcol_grouping_samples[1]
+        )
+    }
     # Identify all unique devices in metadata
-    unique_devices <- unique(df[["Device"]])
+    unique_devices <- unique(df[[dfcol_grouping_samples[[1]]]])
+
+    if (all(is.null(names(flowframes)))) {
+        stop("flowframes must be a named list")
+    }
 
     # Assign colors if a function is provided instead of a named vector
     if (!all(unique_devices %in% names(device_colors))) {
@@ -87,9 +107,9 @@ cycompare_preparation <- function(flowframes,
     )
 
     # Collect and join cell counts with metadata
-    counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist()
+    counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist(fill = TRUE)
     data.table::setnames(counts_ff, "sample", "File")
-    counts_joint <- counts_ff[df, on = "File"]
+    counts_joint <- data.table::data.table(df)[counts_ff, on = "File"]
 
     # Sanity check: ensure gate captures sufficient events
     if (quantile(counts_joint[pop == gatename_primary][["count"]], .9) < 100) {

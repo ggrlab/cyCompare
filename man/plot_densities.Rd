@@ -9,7 +9,8 @@ plot_densities(
   df,
   device_colors,
   transformlist = NULL,
-  density_n = 500
+  density_n = 500,
+  dfcol_grouping_samples = "Device"
 )
 }
 \arguments{

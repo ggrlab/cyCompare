@@ -11,7 +11,7 @@ test_that("CyCompare Badalona samples", {
         ff_columns_relevant = names(relevant_mn),
         df = df,
         n_events_postgate = 1e4,
-        gatingsets = gslist,
+        gatingsets = gatingsets,
         gatename_primary = "/Singlets/CD45+/CD3+",
         marker_to_gate = marker_to_gate
     )

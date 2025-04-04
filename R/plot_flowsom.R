@@ -45,7 +45,8 @@ plot_flowsom <- function(ff_gated,
                          scale = FALSE,
                          xdim = 3,
                          ydim = 3,
-                         seed = 3711283) {
+                         seed = 3711283,
+                         dfcol_grouping_samples = "Device") {
     # Convert the list of flowFrames into a flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
 
@@ -91,7 +92,7 @@ plot_flowsom <- function(ff_gated,
         p0 <- ggfortify:::autoplot.prcomp(
             res_pca,
             data = df,
-            colour = "Device"
+            colour = dfcol_grouping_samples[[1]]
         ) +
             ggpubr::theme_pubr() +
             ggplot2::theme(legend.position = "top") +
@@ -130,9 +131,15 @@ plot_flowsom <- function(ff_gated,
 
         # Reshape data to compare proportions per device
         x_data_df_persample <- x_data_df_long |>
-            dplyr::select(Device, SuperSample, Sample, cluster_id, proportion) |>
+            dplyr::select(
+                !!rlang::sym(dfcol_grouping_samples[[1]]),
+                SuperSample,
+                Sample,
+                cluster_id,
+                proportion
+            ) |>
             tidyr::pivot_wider(
-                names_from = c("Device"),
+                names_from = dfcol_grouping_samples[[1]],
                 values_from = "proportion"
             )
 
