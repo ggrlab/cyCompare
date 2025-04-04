@@ -90,6 +90,11 @@ cycompare_preparation <- function(flowframes,
         }
     }
 
+    marker_to_gate_check(
+        marker_to_gate = marker_to_gate,
+        gatingsets = gatingsets
+    )
+
     # Apply the primary gate to each sample using cytobench::gate_cells
     gated_ff <- sapply(
         names(flowframes),

@@ -29,7 +29,7 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
     gated_dt <- lapply(ff_gated, function(x) {
         flowCore::exprs(x) |> data.table::as.data.table()
     }) |>
-        data.table::rbindlist(idcol = "File") |>
+        data.table::rbindlist(idcol = "File", fill = TRUE) |>
         data.table::melt(id.vars = "File")
 
     compute_density <- function(x, transform_x) {
