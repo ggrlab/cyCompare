@@ -36,6 +36,8 @@
 cycompare <- function(flowframes,
                       df,
                       ff_columns_relevant,
+                      dfcol_grouping_samples = "Device",
+                      dfcol_train_validation_other = "train_validation_test",
                       transformlist = function(x) asinh(x / 1e3),
                       gatingsets,
                       gatename_primary,
@@ -77,7 +79,7 @@ cycompare <- function(flowframes,
             seed = postgate_sample_seed,
             marker_to_gate = marker_to_gate
         )
-        if(is.character(prepared_saveload)) {
+        if (is.character(prepared_saveload)) {
             qs::qsave(prepared, prepared_saveload)
         }
     }
@@ -86,6 +88,7 @@ cycompare <- function(flowframes,
     device_colors <- prepared[["device_colors"]]
     marker_to_gate <- prepared[["marker_to_gate"]]
     gatename_primary <- prepared[["gatename_primary"]]
+
     #### 1. Basic plots
     ## 1.1 Samples over time per device
     p1.1 <- plot_samples_by_time(df)
@@ -134,6 +137,8 @@ cycompare <- function(flowframes,
         ff_gated = gated_ff,
         df = df,
         device_colors = device_colors,
+        dfcol_train_validation_other = dfcol_train_validation_other,
+        dfcol_grouping_samples = dfcol_grouping_samples,
         transformlist = transformlist,
         nClus = nClus,
         scale = scale,
