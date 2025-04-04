@@ -1,6 +1,6 @@
 Package: cyCompare
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.1.003
+Version: 0.0.1.004
 Authors@R: 
     person("Gunther", "Glehr", , "gunthergl@gmx.net", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1495-9162"))

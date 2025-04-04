@@ -12,6 +12,8 @@
 #' @param gatename_primary A character string specifying the primary gating population.
 #' @param n_events_postgate An integer specifying the maximum number of events to keep post-gating.
 #' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
+#' @param postgate_sample_seed An integer seed for random sampling of events after gating (default: `42`).
+#' @param prepared_saveload A character string specifying the file path to save or load (if exists) prepared data.
 #' @param device_colors A named vector or function that provides colors for each device.
 #'        If a function is provided, it should take the number of devices as input and return a vector of colors.
 #' @param nClus An integer specifying the number of clusters for FlowSOM clustering (default: 5).
@@ -31,52 +33,59 @@
 #'
 #' @export
 
-cycompare <- function(
-    flowframes,
-    df,
-    ff_columns_relevant,
-    transformlist = function(x) asinh(x / 1e3),
-    gatingsets,
-    gatename_primary,
-    n_events_postgate = 10e3,
-    postgate_sample_seed = 42,
-    marker_to_gate,
-    device_colors = function(n) {
-        RColorBrewer::brewer.pal(n, "Dark2")
-    },
-    # OTD parameters
-    OTD_kwargs_loss = list(
-        loss = lossfun_hist,
-        verbose = FALSE,
-        write_intermediate = FALSE,
-        # Do not skip any comparisons
-        should_skip = function(i, j) FALSE,
-        take_time = FALSE,
-        return_as_matrix = TRUE
-    ),
-    # FlowSOM parameters
-    nClus = 5,
-    scale = FALSE,
-    xdim = 3,
-    ydim = 3,
-    seed = 3711283) {
-    prepared <- cycompare_preparation(
-        flowframes = flowframes,
-        df = df,
-        ff_columns_relevant = ff_columns_relevant,
-        device_colors = device_colors,
-        gatingsets = gatingsets,
-        gatename_primary = gatename_primary,
-        n_events_postgate = n_events_postgate,
-        seed = postgate_sample_seed,
-        marker_to_gate = marker_to_gate
-    )
+cycompare <- function(flowframes,
+                      df,
+                      ff_columns_relevant,
+                      transformlist = function(x) asinh(x / 1e3),
+                      gatingsets,
+                      gatename_primary,
+                      n_events_postgate = 10e3,
+                      postgate_sample_seed = 42,
+                      marker_to_gate,
+                      prepared_saveload = FALSE,
+                      device_colors = function(n) {
+                          RColorBrewer::brewer.pal(n, "Dark2")
+                      },
+                      # OTD parameters
+                      OTD_kwargs_loss = list(
+                          loss = lossfun_hist,
+                          verbose = FALSE,
+                          write_intermediate = FALSE,
+                          # Do not skip any comparisons
+                          should_skip = function(i, j) FALSE,
+                          take_time = FALSE,
+                          return_as_matrix = TRUE
+                      ),
+                      # FlowSOM parameters
+                      nClus = 5,
+                      scale = FALSE,
+                      xdim = 3,
+                      ydim = 3,
+                      seed = 3711283) {
+    if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
+        message("Loading prepared data from ", prepared_saveload)
+        prepared <- qs::qread(prepared_saveload)
+    } else {
+        prepared <- cycompare_preparation(
+            flowframes = flowframes,
+            df = df,
+            ff_columns_relevant = ff_columns_relevant,
+            device_colors = device_colors,
+            gatingsets = gatingsets,
+            gatename_primary = gatename_primary,
+            n_events_postgate = n_events_postgate,
+            seed = postgate_sample_seed,
+            marker_to_gate = marker_to_gate
+        )
+        if(is.character(prepared_saveload)) {
+            qs::qsave(prepared, prepared_saveload)
+        }
+    }
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
     device_colors <- prepared[["device_colors"]]
     marker_to_gate <- prepared[["marker_to_gate"]]
     gatename_primary <- prepared[["gatename_primary"]]
-
     #### 1. Basic plots
     ## 1.1 Samples over time per device
     p1.1 <- plot_samples_by_time(df)
