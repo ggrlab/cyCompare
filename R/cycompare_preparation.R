@@ -64,8 +64,15 @@ cycompare_preparation <- function(flowframes,
                 device_colors(length(unique_devices))[seq_along(unique_devices)],
                 unique_devices
             )
-            warning("The following device colors were automatically assigned:")
-            warning(paste0(device_colors, collapse = ", "))
+            warning(
+                "The following device colors were automatically assigned:",
+                paste0(
+                    names(device_colors),
+                    " = ",
+                    device_colors,
+                    collapse = ", "
+                )
+            )
         } else {
             stop("device_colors must be a named vector or a function(number_of_devices)")
         }
@@ -114,6 +121,9 @@ cycompare_preparation <- function(flowframes,
     # Collect and join cell counts with metadata
     counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist(fill = TRUE)
     data.table::setnames(counts_ff, "sample", "File")
+    if (!all(df[["File"]] %in% counts_ff[["File"]])) {
+        stop("Not all files in df are present in counts_ff based on 'File' column.")
+    }
     counts_joint <- data.table::data.table(df)[counts_ff, on = "File"]
 
     # Sanity check: ensure gate captures sufficient events
@@ -133,6 +143,7 @@ cycompare_preparation <- function(flowframes,
         n_cells = n_events_postgate,
         seed = seed
     )
+    gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
 
     # Return result
     return(

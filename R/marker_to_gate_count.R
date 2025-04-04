@@ -9,7 +9,7 @@ marker_to_gate_count <- function(marker_to_gate, dt_count_mfi) {
 
     # Filter dt_count_mfi to keep only relevant gating populations
     dt_count_mfi_relevant <- dt_count_mfi[pop %in% relevant_gates]
-    if (!nrow(dt_count_mfi_relevant) == length(relevant_gates) * length(unique(dt_count_mfi[, "File"]))) {
+    if (!nrow(dt_count_mfi_relevant) == length(relevant_gates) * nrow(unique(dt_count_mfi[, "File"]))) {
         missing_gates <- setdiff(relevant_gates, unique(dt_count_mfi_relevant[["pop"]]))
         warning("Not all relevant gates are present in the MFI data: \n  ", paste0(missing_gates, collapse = "  \n"))
     }

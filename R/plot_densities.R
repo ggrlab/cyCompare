@@ -33,11 +33,24 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         data.table::melt(id.vars = "File")
 
     compute_density <- function(x, transform_x) {
-        d <- density(transform_x(x), n = density_n) # 512 points for smoother curves
-        data.table::data.table(x = d$x, y = d$y)
+        x_noNA <- x[!is.na(x)]
+        if (length(x_noNA) == 0) {
+            res <- data.table::data.table(x = NA_real_, y = NA_real_)
+        } else {
+            d <- density(transform_x(x_noNA), n = density_n) # 512 points for smoother curves
+            res <- data.table::data.table(x = d$x, y = d$y)
+        }
+        return(res)
     }
-    densities <- gated_dt[, compute_density(value, transformlist[[variable[[1]]]]), by = .(File, variable)]
-    densities <- densities[df[, c("File", dfcol_grouping_samples[[1]], "Sample")], on = "File"]
+    densities <- gated_dt[,
+        {
+            compute_density(value, transformlist[[variable[[1]]]])
+        },
+        by = .(File, variable)
+    ]
+    df_part <- data.table::data.table(df)
+    df_part <- df_part[, c("File", dfcol_grouping_samples[[1]], "Sample"), with = FALSE]
+    densities <- densities[df_part, on = "File"]
     p0 <- ggplot2::ggplot(
         densities,
         ggplot2::aes(x = x, y = y, color = !!rlang::sym(dfcol_grouping_samples[[1]]))

@@ -38,7 +38,7 @@ plot_otd <- function(ff_gated,
             flowCore::exprs(x) |> data.table::as.data.table()
         }
     )
-    dt_events_bound <- data.table::rbindlist(dt_events)
+    dt_events_bound <- data.table::rbindlist(dt_events, idcol = "File")
     mastersample <- dt_events_bound[sample(.N, n_mastersample), ][, File := NULL]
     loss_calculated <- do.call(loss_pairwise, c(
         list(

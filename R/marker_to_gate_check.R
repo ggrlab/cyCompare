@@ -7,7 +7,6 @@ marker_to_gate_check <- function(marker_to_gate, gatingsets) {
 
         return(missing_gates)
     })
-    relevant_gates_in_gatingsets[[1]] <- c("a", "bv")
     if (any(sapply(relevant_gates_in_gatingsets, length) > 0)) {
         warning("Not all relevant gates are present in the GatingSet: \n  ")
         for (x in names(relevant_gates_in_gatingsets)) {
