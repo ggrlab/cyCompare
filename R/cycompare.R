@@ -77,7 +77,6 @@ cycompare <- function(
     marker_to_gate <- prepared[["marker_to_gate"]]
     gatename_primary <- prepared[["gatename_primary"]]
 
-    browser()
     #### 1. Basic plots
     ## 1.1 Samples over time per device
     p1.1 <- plot_samples_by_time(df)
