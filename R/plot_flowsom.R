@@ -85,8 +85,16 @@ plot_flowsom <- function(ff_gated,
     plots_pca <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
 
+        # scale scales per column
+        x_data_scaled <- scale(
+            x_data |>
+                dplyr::select(-sample),
+            center = TRUE, scale = TRUE
+        )
+        # variance is NA if all values are the same
+        x_data_scaled_noconstant.cols <- x_data_scaled[, !is.na(apply(x_data_scaled, 2, var))]
         # Perform PCA on cluster abundance data
-        res_pca <- stats::prcomp(x_data |> dplyr::select(-sample), scale = TRUE)
+        res_pca <- stats::prcomp(x_data_scaled_noconstant.cols, scale = FALSE)
 
         # Generate PCA plot using ggfortify
         p0 <- ggfortify:::autoplot.prcomp(
