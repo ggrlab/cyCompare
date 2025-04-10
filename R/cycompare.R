@@ -45,6 +45,7 @@ cycompare <- function(
         RColorBrewer::brewer.pal(n, "Dark2")
     },
     # OTD parameters
+    do_otd = TRUE,
     OTD_kwargs_loss = list(
         loss = lossfun_hist,
         verbose = FALSE,
@@ -55,6 +56,7 @@ cycompare <- function(
         return_as_matrix = TRUE
     ),
     # FlowSOM parameters
+    do_flowsom = TRUE,
     nClus = 5,
     scale = FALSE,
     xdim = 3,
@@ -68,7 +70,8 @@ cycompare <- function(
         gatingsets = gatingsets,
         gatename_primary = gatename_primary,
         n_events_postgate = n_events_postgate,
-        seed = postgate_sample_seed
+        seed = postgate_sample_seed,
+        transformlist = transformlist
     )
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
@@ -104,34 +107,40 @@ cycompare <- function(
         ff_gated = gated_ff,
         df = df,
         device_colors = device_colors,
-        transformlist = transformlist
+        transformlist = transformlist,
+        relevant_columns = ff_columns_relevant
     )
 
     # 3. OTD
-    p3.1 <- plot_otd(
-        ff_gated = gated_ff,
-        df = df,
-        device_colors = device_colors,
-        transformlist = transformlist,
-        n_mastersample = n_events_postgate,
-        kwargs_loss = OTD_kwargs_loss
-    )
+    if (do_otd) {
+        p3.1 <- plot_otd(
+            ff_gated = gated_ff,
+            df = df,
+            device_colors = device_colors,
+            transformlist = transformlist,
+            n_mastersample = n_events_postgate,
+            kwargs_loss = OTD_kwargs_loss
+        )
+    } else {
+        p3.1 <- NULL
+    }
 
     # 4 Clustering with FlowSOM
-    p_flowsom <- plot_flowsom(
-        ff_gated = gated_ff,
-        df = df,
-        device_colors = device_colors,
-        transformlist = transformlist,
-        nClus = nClus,
-        scale = scale,
-        xdim = xdim,
-        ydim = ydim,
-        seed = seed
-    )
-
-    # 5. Outcome prediction
-
+    if (do_flowsom) {
+        p_flowsom <- plot_flowsom(
+            ff_gated = gated_ff,
+            df = df,
+            device_colors = device_colors,
+            transformlist = transformlist,
+            nClus = nClus,
+            scale = scale,
+            xdim = xdim,
+            ydim = ydim,
+            seed = seed
+        )
+    } else {
+        p_flowsom <- NULL
+    }
     return(
         list(
             "Samples over time per device" = p1.1,

@@ -11,9 +11,10 @@
 #' @return A `ggplot2` object showing the density distributions of markers across samples and devices.
 #'
 #' @export
-plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500) {
-    relevant_columns <- flowCore::colnames(ff_gated[[1]])
-
+plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500, relevant_columns = NULL) {
+    if (all(is.null(relevant_columns))) {
+        relevant_columns <- flowCore::colnames(ff_gated[[1]])
+    }
 
     # Transformation functions
     if (length(transformlist) == 1 && !is.null(transformlist)) {
@@ -25,6 +26,9 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
             relevant_columns
         )
     }
+    for (col_x in flowCore::colnames(ff_gated[[1]])[!flowCore::colnames(ff_gated[[1]]) %in% relevant_columns]) {
+        transformlist[[col_x]] <- identity
+    }
 
     gated_dt <- lapply(ff_gated, function(x) {
         flowCore::exprs(x) |> data.table::as.data.table()
@@ -32,22 +36,20 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         data.table::rbindlist(idcol = "File") |>
         data.table::melt(id.vars = "File")
 
-    compute_density <- function(x, transform_x) {
+    gated_dt <- gated_dt[variable %in% relevant_columns]
+    compute_density <- function(x, transform_x, y) {
         d <- density(transform_x(x), n = density_n) # 512 points for smoother curves
         data.table::data.table(x = d$x, y = d$y)
     }
-    densities <- gated_dt[, compute_density(value, transformlist[[variable[[1]]]]), by = .(File, variable)]
+    densities <- gated_dt[, compute_density(value, transformlist[[as.character(variable[[1]])]]), by = .(File, variable)]
     densities <- densities[df[, c("File", "Device", "Sample")], on = "File"]
     p0 <- ggplot2::ggplot(
         densities,
         ggplot2::aes(x = x, y = y, color = Device)
     ) +
         ggplot2::geom_line() +
-        # ggplot2::geom_area(ggplot2::aes(fill = Device), alpha = 0.2) +
         ggplot2::geom_ribbon(ggplot2::aes(ymin = 0, ymax = y, fill = Device), alpha = 0.2) +
-        # ggplot2::facet_grid(Sample~variable, scales = "free") +
-        ggh4x::facet_grid2(Sample ~ variable, scales = "free_y", independent = "y") +
-        # ggh4x::facet_grid2(Sample~variable, scales = "free",independent = "x") +
+        ggh4x::facet_grid2(Sample ~ variable, scales = "free", independent = "y") +
         ggpubr::theme_pubr() +
         ggplot2::theme(
             # remove axis lines
@@ -60,7 +62,6 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
             axis.text.y = ggplot2::element_blank(),
             axis.ticks.y = ggplot2::element_blank()
         )
-
 
     # Apply custom device colors if provided
     if (!all(is.null(device_colors))) {

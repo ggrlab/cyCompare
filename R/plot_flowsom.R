@@ -62,6 +62,7 @@ plot_flowsom <- function(ff_gated,
         )
     }
 
+
     # Apply transformation to the flowSet
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)
 

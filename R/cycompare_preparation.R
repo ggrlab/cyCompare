@@ -32,7 +32,8 @@ cycompare_preparation <- function(
     gatingsets,
     gatename_primary,
     n_events_postgate = 10e3,
-    seed = 42) {
+    seed = 42,
+    transformlist = NULL) {
     # Identify all unique devices in metadata
     unique_devices <- unique(df[["Device"]])
 
@@ -63,6 +64,13 @@ cycompare_preparation <- function(
                 verbose = FALSE
             )
             tmp[["counts"]][["sample"]] <- x
+            # markernames to colnames in gated_ff
+            # Such that transformlist later works by COLUMN name
+            names_dict <- setNames(
+                names(flowCore::markernames(tmp[["flowset_gated"]])),
+                flowCore::markernames(tmp[["flowset_gated"]])
+            )
+            colnames(tmp[["counts"]])[colnames(tmp[["counts"]]) %in% names(names_dict)] <- na.omit(names_dict[colnames(tmp[["counts"]])])
             tmp
         }
     )
@@ -89,6 +97,21 @@ cycompare_preparation <- function(
         n_cells = n_events_postgate,
         seed = seed
     )
+
+
+    if (length(transformlist) == 1 && !is.null(transformlist)) {
+        if (is.function(transformlist)) {
+            transformlist <- list(transformlist)
+        }
+        transformlist <- setNames(
+            rep(transformlist, length(ff_columns_relevant)),
+            ff_columns_relevant
+        )
+    }
+
+    if (!all(ff_columns_relevant %in% names(transformlist))) {
+        stop("All ff_columns_relevant must be present in transformlist")
+    }
 
     # Return result
     return(

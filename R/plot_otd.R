@@ -11,22 +11,28 @@ plot_otd <- function(ff_gated,
                          should_skip = function(i, j) FALSE,
                          take_time = FALSE,
                          return_as_matrix = TRUE
-                     )) {
+                     ),
+                     relevant_columns = NULL) {
+    if (all(is.null(relevant_columns))) {
+        relevant_columns <- flowCore::colnames(ff_gated[[1]])
+    }
+
     # Convert the list of flowFrames into a flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
 
     # If a single transformation function is provided, apply it to all markers
     if (length(transformlist) == 1) {
         fc_transformlist <- flowCore::transformList(
-            flowCore::colnames(gated_fs[[1]]),
+            relevant_columns,
             transformlist
         )
     } else {
         fc_transformlist <- flowCore::transformList(
-            flowCore::colnames(gated_fs[[1]]),
+            relevant_columns,
             transformlist
         )
     }
+
 
     # Apply transformation to the flowSet
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)

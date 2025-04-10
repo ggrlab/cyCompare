@@ -14,7 +14,8 @@ cycompare_preparation(
   gatingsets,
   gatename_primary,
   n_events_postgate = 10000,
-  seed = 42
+  seed = 42,
+  transformlist = NULL
 )
 }
 \arguments{
