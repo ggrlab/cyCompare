@@ -10,11 +10,14 @@ cytometry
 Cytometry
 CytoNorm
 distibution
+downsampled
+downsampling
 dplyr
 EMD
 emdist
 envoke
 flowCore
+FlowFrames
 FlowSOM
 flowWorkspace
 ggfortify
@@ -37,6 +40,7 @@ RColorBrewer
 repo
 repr
 reprex
+reproducibility
 ROI
 roxygen
 Roxygen
@@ -48,5 +52,6 @@ StackOverflow
 styler
 testthat
 tidyverse
+upsample
 xdist
 ydist
