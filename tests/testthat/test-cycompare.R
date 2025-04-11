@@ -1,4 +1,3 @@
-devtools::load_all()
 test_that("CyCompare Badalona samples", {
     tmp <- prepare_testdata()
     ff_list_downsampled <- tmp[["ff_list_downsampled"]]
