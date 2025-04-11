@@ -16,7 +16,9 @@ cycompare_preparation(
   n_events_postgate = 10000,
   marker_to_gate = NULL,
   seed = 42,
+  dfcol_grouping_supersamples = c("Study"),
   dfcol_grouping_samples = "Device",
+  dfcol_train_validation_other = NULL,
   transformlist = NULL
 )
 }

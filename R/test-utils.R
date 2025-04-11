@@ -1,4 +1,3 @@
-
 prepare_testdata <- function() {
     ## Preparation of a proper dataset
     ff_files <- list.files("example_data/2025-03-17_BAD", recursive = TRUE, full.names = TRUE)
@@ -28,7 +27,7 @@ prepare_testdata <- function() {
     ### Actual testing of cycompare
     ff_list <- ff_files_panel |> sapply(flowCore::read.FCS, simplify = FALSE)
     ff_list_downsampled <- lapply(ff_list, function(x) {
-        # x[sample(nrow(x), 1e3), ]
+        x[sample(nrow(x), 1e4), ]
         x
     })
     flowCore::flowSet(ff_list_downsampled)
@@ -47,28 +46,51 @@ prepare_testdata <- function() {
     # flowWorkspace::gh_get_pop_paths(gslist[[4]])
 
     relevant_mn <- flowCore::flowSet(ff_list_downsampled) |> flowCore::markernames()
+    # marker_to_gate <- list(
+    #     "CD45RA-FITC-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7-"),
+    #     "CCR7-PE-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7+"),
+    #     "CD28-ECD-A" = c(
+    #         "/Singlets/CD45+/CD3+/CD27+CD28+",
+    #         "/Singlets/CD45+/CD3+/CD27+CD28+"
+    #     ),
+    #     "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD57-PD1+"),
+    #     "CD27-PC7-A" = c(
+    #         "/Singlets/CD45+/CD3+/CD27+CD28+",
+    #         "/Singlets/CD45+/CD3+/CD27+CD28+"
+    #     ),
+    #     "CD4-APC-A" = "/Singlets/CD45+/CD3+/CD4+",
+    #     "CD8-AF700-A" = "/Singlets/CD45+/CD3+/CD8+",
+    #     "CD3-AA750-A" = "/Singlets/CD45+/CD3+",
+    #     "CD57-PB-A" = c(
+    #         "/Singlets/CD45+/CD3+/CD57+PD1+",
+    #         "/Singlets/CD45+/CD3+/CD57+PD1-",
+    #         "/Singlets/CD45+/CD3+/CD57+PD1+",
+    #         "/Singlets/CD45+/CD3+/CD57+PD1-"
+    #     ),
+    #     "CD45-KrO-A" = c("/Singlets/CD45+")
+    # )
     marker_to_gate <- list(
-        "CD45RA-FITC-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7-"),
-        "CCR7-PE-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7+"),
-        "CD28-ECD-A" = c(
+        "FITC-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7-"),
+        "PE-A" = c("/Singlets/CD45+/CD3+/CD45RA+CCR7+"),
+        "ECD-A" = c(
             "/Singlets/CD45+/CD3+/CD27+CD28+",
             "/Singlets/CD45+/CD3+/CD27+CD28+"
         ),
-        "PD1-PC5.5-A" = c("/Singlets/CD45+/CD3+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD57-PD1+"),
-        "CD27-PC7-A" = c(
+        "PC5.5-A" = c("/Singlets/CD45+/CD3+/CD57-PD1+", "/Singlets/CD45+/CD3+/CD57-PD1+"),
+        "PC7-A" = c(
             "/Singlets/CD45+/CD3+/CD27+CD28+",
             "/Singlets/CD45+/CD3+/CD27+CD28+"
         ),
-        "CD4-APC-A" = "/Singlets/CD45+/CD3+/CD4+",
-        "CD8-AF700-A" = "/Singlets/CD45+/CD3+/CD8+",
-        "CD3-AA750-A" = "/Singlets/CD45+/CD3+",
-        "CD57-PB-A" = c(
+        "APC-A" = "/Singlets/CD45+/CD3+/CD4+",
+        "AF700-A" = "/Singlets/CD45+/CD3+/CD8+",
+        "AA750-A" = "/Singlets/CD45+/CD3+",
+        "PB-A" = c(
             "/Singlets/CD45+/CD3+/CD57+PD1+",
             "/Singlets/CD45+/CD3+/CD57+PD1-",
             "/Singlets/CD45+/CD3+/CD57+PD1+",
             "/Singlets/CD45+/CD3+/CD57+PD1-"
         ),
-        "CD45-KrO-A" = c("/Singlets/CD45+")
+        "KrO-A" = c("/Singlets/CD45+")
     )
     return(
         list(

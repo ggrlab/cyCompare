@@ -36,7 +36,9 @@ cycompare <- function(
     flowframes,
     df,
     ff_columns_relevant,
-    dfcol_grouping_supersamples = c("Study"),
+    dfcol_grouping_supersamples = NULL,
+    dfcol_grouping_samples = "Device",
+    dfcol_train_validation_other = "train_validation_test",
     transformlist = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
@@ -81,7 +83,8 @@ cycompare <- function(
             transformlist = transformlist,
             dfcol_grouping_samples = dfcol_grouping_samples,
             dfcol_train_validation_other = dfcol_train_validation_other,
-            dfcol_grouping_supersamples = dfcol_grouping_supersamples
+            dfcol_grouping_supersamples = dfcol_grouping_supersamples,
+            marker_to_gate = marker_to_gate
         )
         if (is.character(prepared_saveload)) {
             qs::qsave(prepared, prepared_saveload)

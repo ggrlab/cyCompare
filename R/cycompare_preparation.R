@@ -106,6 +106,20 @@ cycompare_preparation <- function(
         gatingsets = gatingsets
     )
 
+    missing_markernames <- setdiff(
+        names(marker_to_gate),
+        flowCore::colnames(flowframes[[1]])
+    )
+    if (length(missing_markernames) > 0) {
+        stop(
+            "Not all markers in marker_to_gate are present in flowframes.",
+            "Please use the colnames, not markernames.\nMissing: ",
+            paste0(missing_markernames, collapse = ", "),
+            "\nPresent: ",
+            paste0(flowCore::colnames(flowframes[[1]]), collapse = ", ")
+        )
+    }
+
     # Apply the primary gate to each sample using cytobench::gate_cells
     gated_ff <- sapply(
         names(flowframes),

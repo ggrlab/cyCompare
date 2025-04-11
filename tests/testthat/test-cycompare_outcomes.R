@@ -1,5 +1,3 @@
-devtools::load_all()
-
 test_that("CyCompare Badalona samples, outcomes", {
     options(warn = 1)
     ## Preparation of a proper dataset
@@ -164,7 +162,6 @@ test_that("CyCompare Badalona samples, outcomes", {
         dfcol_outcomes = c("outcome_1", "outcome_2"),
         results_cycompare_analyse = result_analysis
     )
-    browser()
     pdf("removeme.pdf", width = 20)
     print(tmp)
     dev.off()

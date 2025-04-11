@@ -19,11 +19,18 @@ plot_samples_by_time <- function(df, dfcol_grouping_supersamples = NULL) {
         dplyr::mutate(
             `Number of` = ifelse(grepl("ssID", cumulative_x), "SuperSamples", "Samples")
         )
-    p0 <-
-        ggplot2::ggplot(
+    if (!all(is.null(dfcol_grouping_supersamples))) {
+        p0 <- ggplot2::ggplot(
             df_cumulative,
             ggplot2::aes(x = Time, y = n, col = `Number of`, group = !!rlang::sym(dfcol_grouping_supersamples[[1]]))
-        ) +
+        )
+    } else {
+        p0 <- ggplot2::ggplot(
+            df_cumulative,
+            ggplot2::aes(x = Time, y = n, col = `Number of`)
+        )
+    }
+    p0 <- p0 +
         ggplot2::geom_line(linewidth = .6) +
         ggplot2::geom_point(shape = 3) +
         ggpubr::theme_pubclean() +
