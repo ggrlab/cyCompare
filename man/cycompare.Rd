@@ -14,6 +14,7 @@ cycompare(
   n_events_postgate = 10000,
   postgate_sample_seed = 42,
   marker_to_gate,
+  prepared_saveload = FALSE,
   device_colors = function(n) {
      RColorBrewer::brewer.pal(n, "Dark2")
  },
@@ -45,7 +46,11 @@ cycompare(
 
 \item{n_events_postgate}{An integer specifying the maximum number of events to keep post-gating.}
 
+\item{postgate_sample_seed}{An integer seed for random sampling of events after gating (default: \code{42}).}
+
 \item{marker_to_gate}{A named vector mapping marker names to their corresponding gates.}
+
+\item{prepared_saveload}{A character string specifying the file path to save or load (if exists) prepared data.}
 
 \item{device_colors}{A named vector or function that provides colors for each device.
 If a function is provided, it should take the number of devices as input and return a vector of colors.}

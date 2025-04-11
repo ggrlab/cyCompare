@@ -13,11 +13,11 @@ cycompare_preparation(
  },
   gatingsets,
   gatename_primary,
-  marker_to_gate = NULL,
   n_events_postgate = 10000,
+  marker_to_gate = NULL,
   seed = 42,
-  transformlist = NULL,
-  dfcol_grouping_samples = "Device"
+  dfcol_grouping_samples = "Device",
+  transformlist = NULL
 )
 }
 \arguments{

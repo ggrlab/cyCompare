@@ -10,9 +10,9 @@ plot_densities(
   device_colors,
   transformlist = NULL,
   density_n = 500,
+  dfcol_grouping_samples = "Device",
   relevant_columns = NULL,
-  limit_density_quantile = NA,
-  dfcol_grouping_samples = "Device"
+  limit_density_quantile = NA
 )
 }
 \arguments{
