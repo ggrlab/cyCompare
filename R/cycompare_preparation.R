@@ -33,8 +33,10 @@ cycompare_preparation <- function(flowframes,
                                   marker_to_gate = NULL,
                                   n_events_postgate = 10e3,
                                   seed = 42,
-                                  dfcol_grouping_samples = "Device") {
-    mandatory_df_cols <- c("File", "SuperSample", "Sample", dfcol_grouping_samples[[1]], "Time")
+                                  dfcol_grouping_supersamples = c("Study"),
+                                  dfcol_grouping_samples = "Device",
+                                  dfcol_train_validation_other = NULL) {
+    mandatory_df_cols <- c("File", "SuperSample", "Sample", dfcol_grouping_samples[[1]], dfcol_train_validation_other, dfcol_grouping_supersamples, "Time")
     if (!all(mandatory_df_cols %in% colnames(df))) {
         tmp <- paste0(
             "df must contain the following columns: ",

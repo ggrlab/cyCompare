@@ -36,6 +36,7 @@
 cycompare <- function(flowframes,
                       df,
                       ff_columns_relevant,
+                      dfcol_grouping_supersamples = c("Study"),
                       dfcol_grouping_samples = "Device",
                       dfcol_train_validation_other = "train_validation_test",
                       transformlist = function(x) asinh(x / 1e3),
@@ -77,7 +78,10 @@ cycompare <- function(flowframes,
             gatename_primary = gatename_primary,
             n_events_postgate = n_events_postgate,
             seed = postgate_sample_seed,
-            marker_to_gate = marker_to_gate
+            marker_to_gate = marker_to_gate,
+            dfcol_grouping_samples = dfcol_grouping_samples,
+            dfcol_train_validation_other = dfcol_train_validation_other,
+            dfcol_grouping_supersamples = dfcol_grouping_supersamples
         )
         if (is.character(prepared_saveload)) {
             qs::qsave(prepared, prepared_saveload)
@@ -91,7 +95,10 @@ cycompare <- function(flowframes,
 
     #### 1. Basic plots
     ## 1.1 Samples over time per device
-    p1.1 <- plot_samples_by_time(df)
+    p1.1 <- plot_samples_by_time(
+        df,
+        dfcol_grouping_supersamples = dfcol_grouping_supersamples
+    )
 
 
 

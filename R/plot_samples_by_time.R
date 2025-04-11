@@ -1,4 +1,8 @@
-plot_samples_by_time <- function(df) {
+plot_samples_by_time <- function(df, dfcol_grouping_supersamples = NULL) {
+    if (!all(is.null(dfcol_grouping_supersamples))) {
+        df <- df |>
+            dplyr::group_by(!!!rlang::syms(dfcol_grouping_supersamples))
+    }
     df_cumulative <- df |>
         dplyr::arrange(Time) |>
         dplyr::mutate(
@@ -6,6 +10,7 @@ plot_samples_by_time <- function(df) {
             cumulative_ssID = cumsum(!duplicated(SuperSample)),
             date_minus_first = Time - min(Time)
         ) |>
+        dplyr::ungroup() |>
         tidyr::pivot_longer(
             cols = c("cumulative_sID", "cumulative_ssID"),
             values_to = "n",
@@ -17,7 +22,7 @@ plot_samples_by_time <- function(df) {
     p0 <-
         ggplot2::ggplot(
             df_cumulative,
-            ggplot2::aes(x = Time, y = n, col = `Number of`)
+            ggplot2::aes(x = Time, y = n, col = `Number of`, group = !!rlang::sym(dfcol_grouping_supersamples[[1]]))
         ) +
         ggplot2::geom_line(linewidth = .6) +
         ggplot2::geom_point(shape = 3) +

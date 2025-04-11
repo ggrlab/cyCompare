@@ -26,6 +26,9 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         )
     }
 
+    if(!all(names(is.null(ff_gated)))){
+        stop("ff_gated must be a named list of flowFrame objects")
+    }
     gated_dt <- lapply(ff_gated, function(x) {
         flowCore::exprs(x) |> data.table::as.data.table()
     }) |>
