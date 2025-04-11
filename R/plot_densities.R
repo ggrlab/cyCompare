@@ -7,11 +7,24 @@
 #' @param device_colors An optional named vector of colors for each device to use in the plot.
 #' @param transformlist A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.
 #' @param density_n An integer specifying the number of points used to estimate density (default: 500).
+#' @param relevant_columns A character vector of marker names to include in the density plots. If `NULL`, all markers will be included.
+#' @param limit_density_quantile
+#' A numeric value between 0 and 1 to limit the density to a certain quantile within each variable.
+#' If `NA`, no limit is applied and all densities are shown to their full extent. Use
+#' if one device shows an extreme density peak that is not representative of the other devices
+#' and thus deforms the density plot. 0.95 is a good value to start with.
 #'
 #' @return A `ggplot2` object showing the density distributions of markers across samples and devices.
 #'
 #' @export
-plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, density_n = 500, relevant_columns = NULL) {
+plot_densities <- function(
+    ff_gated,
+    df,
+    device_colors,
+    transformlist = NULL,
+    density_n = 500,
+    relevant_columns = NULL,
+    limit_density_quantile = NA) {
     if (all(is.null(relevant_columns))) {
         relevant_columns <- flowCore::colnames(ff_gated[[1]])
     }
@@ -42,6 +55,12 @@ plot_densities <- function(ff_gated, df, device_colors, transformlist = NULL, de
         data.table::data.table(x = d$x, y = d$y)
     }
     densities <- gated_dt[, compute_density(value, transformlist[[as.character(variable[[1]])]]), by = .(File, variable)]
+    if (!is.na(limit_density_quantile)) {
+        # Limit the density to a certain quantile within each variable
+        # calculate the top quantile for each variable
+        top_quantile <- densities[, quantile(y, limit_density_quantile), by = variable]
+        densities <- densities[top_quantile, on = "variable"][, y := pmin(y, V1)][, V1 := NULL]
+    }
     densities <- densities[df[, c("File", "Device", "Sample")], on = "File"]
     p0 <- ggplot2::ggplot(
         densities,

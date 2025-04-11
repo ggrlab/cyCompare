@@ -9,7 +9,9 @@ plot_densities(
   df,
   device_colors,
   transformlist = NULL,
-  density_n = 500
+  density_n = 500,
+  relevant_columns = NULL,
+  limit_density_quantile = NA
 )
 }
 \arguments{
@@ -22,6 +24,13 @@ plot_densities(
 \item{transformlist}{A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.}
 
 \item{density_n}{An integer specifying the number of points used to estimate density (default: 500).}
+
+\item{relevant_columns}{A character vector of marker names to include in the density plots. If \code{NULL}, all markers will be included.}
+
+\item{limit_density_quantile}{A numeric value between 0 and 1 to limit the density to a certain quantile within each variable.
+If \code{NA}, no limit is applied and all densities are shown to their full extent. Use
+if one device shows an extreme density peak that is not representative of the other devices
+and thus deforms the density plot. 0.95 is a good value to start with.}
 }
 \value{
 A \code{ggplot2} object showing the density distributions of markers across samples and devices.
