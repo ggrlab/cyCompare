@@ -100,8 +100,6 @@ cycompare <- function(
         dfcol_grouping_supersamples = dfcol_grouping_supersamples
     )
 
-
-
     # Plots of counts and percentages
     p1.2_3 <- plot_counts(counts_joint, gatename_primary, device_colors)
 

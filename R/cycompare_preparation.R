@@ -128,21 +128,6 @@ cycompare_preparation <- function(
             tmp
         }
     )
-    gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
-
-    if (length(transformlist) == 1 && !is.null(transformlist)) {
-        if (is.function(transformlist)) {
-            transformlist <- list(transformlist)
-        }
-        transformlist <- setNames(
-            rep(transformlist, length(ff_columns_relevant)),
-            ff_columns_relevant
-        )
-    }
-
-    if (!all(ff_columns_relevant %in% names(transformlist))) {
-        stop("All ff_columns_relevant must be present in transformlist")
-    }
 
     # Collect and join cell counts with metadata
     counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist(fill = TRUE)
