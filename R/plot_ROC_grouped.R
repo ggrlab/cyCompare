@@ -1,16 +1,14 @@
-plot_ROC_grouped <- function(
-    calced_roc, 
-    dfcol_grouping_supersamples = c("Study"),
-    dfcol_grouping_samples = "Device",
-    dfcol_outcomes = c("outcome_1", "outcome_2"),
-    dfcol_train_validation_other = "train_validation_test",
-    dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
-    device_colors = c(
-        "Fortessa" = "#FF0000",
-        "Cytoflex" = "#00FF00",
-        "Aurora" = "#0000FF"
-    )) {
-
+plot_ROC_grouped <- function(calced_roc,
+                             dfcol_grouping_supersamples = c("Study"),
+                             dfcol_grouping_samples = "Device",
+                             dfcol_outcomes = c("outcome_1", "outcome_2"),
+                             dfcol_train_validation_other = "train_validation_test",
+                             dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
+                             device_colors = c(
+                                 "Fortessa" = "#FF0000",
+                                 "Cytoflex" = "#00FF00",
+                                 "Aurora" = "#0000FF"
+                             )) {
     roc_plots_df_total <- tibble::tibble()
     for (group_trained_on_i in seq_len(nrow(calced_roc[["groups"]]))) {
         res_current <- calced_roc[["results"]][[group_trained_on_i]]
@@ -47,7 +45,7 @@ plot_ROC_grouped <- function(
                     ggrocs <- plot_ggroc_multiple(
                         ordered_tmp,
                         col_or_linetype = "linetype",
-                        geom_line_args = list(col = device_colors[group_current[["Device"]]])
+                        geom_line_args = list(col = device_colors[group_current[[dfcol_grouping_samples[[1]]]]])
                     )
                     for (name_x in names(ggrocs)) {
                         .y[[paste0("roc.", name_x)]] <- list(

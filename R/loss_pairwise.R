@@ -145,7 +145,7 @@ loss_pairwise <- function(datalist_A,
             )
         },
         error = function(e) {
-            distances_wrapper(
+            distances <- distances_wrapper(
                 applyfun = apply,
                 filtered_combinations = filtered_combinations,
                 datalist_A = datalist_A,
@@ -158,10 +158,10 @@ loss_pairwise <- function(datalist_A,
                 take_time = take_time,
                 ...
             )
-            warning("Error in parallel distances_wrapper, falling back to sequential: \n", e)
+            warning("parallel distances_wrapper failed, falling back to sequential: \n", e)
+            return(distances)
         }
     )
-
 
     distances_bound <- data.table::rbindlist(distances)
     # If names were NULL, distances_bound and distances_bound_named are identical

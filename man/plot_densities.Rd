@@ -11,7 +11,8 @@ plot_densities(
   transformlist = NULL,
   density_n = 500,
   relevant_columns = NULL,
-  limit_density_quantile = NA
+  limit_density_quantile = NA,
+  dfcol_grouping_samples = "Device"
 )
 }
 \arguments{

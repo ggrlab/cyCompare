@@ -13,7 +13,8 @@ plot_flowsom(
   scale = FALSE,
   xdim = 3,
   ydim = 3,
-  seed = 3711283
+  seed = 3711283,
+  dfcol_grouping_samples = "Device"
 )
 }
 \arguments{

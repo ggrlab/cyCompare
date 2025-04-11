@@ -45,7 +45,9 @@ plot_flowsom <- function(ff_gated,
                          scale = FALSE,
                          xdim = 3,
                          ydim = 3,
-                         seed = 3711283) {
+                         seed = 3711283,
+                         dfcol_grouping_samples = "Device",
+                         dfcol_train_validation_other = NULL) {
     # Convert the list of flowFrames into a flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
 
@@ -66,9 +68,18 @@ plot_flowsom <- function(ff_gated,
     # Apply transformation to the flowSet
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)
 
+    if (!all(is.null(dfcol_train_validation_other))) {
+        gated_fs_transformed_train <- gated_fs_transformed[
+            dplyr::filter(df, !!rlang::sym(dfcol_train_validation_other) == "train") |>
+                dplyr::pull(File)
+        ]
+    } else {
+        gated_fs_transformed_train <- gated_fs_transformed
+    }
+    
     # Perform FlowSOM clustering on the transformed data
     flowsom_all <- FlowSOM::FlowSOM(
-        input = gated_fs_transformed,
+        input = gated_fs_transformed_train,
         transform = FALSE, # Data is already transformed
         transformList = NULL,
         nClus = nClus, # Number of clusters
@@ -85,14 +96,23 @@ plot_flowsom <- function(ff_gated,
     plots_pca <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
 
+        # scale scales per column
+        x_data_scaled <- scale(
+            x_data |>
+                dplyr::select(-sample),
+            center = TRUE, scale = TRUE
+        )
+        # variance is NA if all values are the same
+        x_data_scaled_noconstant.cols <- x_data_scaled[, !is.na(apply(x_data_scaled, 2, var))]
         # Perform PCA on cluster abundance data
-        res_pca <- stats::prcomp(x_data |> dplyr::select(-sample), scale = TRUE)
+        res_pca <- stats::prcomp(x_data_scaled_noconstant.cols, scale = FALSE)
 
         # Generate PCA plot using ggfortify
         p0 <- ggfortify:::autoplot.prcomp(
             res_pca,
             data = df,
-            colour = "Device"
+            colour = dfcol_grouping_samples[[1]],
+            shape = dfcol_train_validation_other[[1]]
         ) +
             ggpubr::theme_pubr() +
             ggplot2::theme(legend.position = "top") +
@@ -131,12 +151,18 @@ plot_flowsom <- function(ff_gated,
 
         # Reshape data to compare proportions per device
         x_data_df_persample <- x_data_df_long |>
-            dplyr::select(Device, SuperSample, Sample, cluster_id, proportion) |>
+            dplyr::select(
+                !!rlang::sym(dfcol_grouping_samples[[1]]),
+                !!!rlang::syms(dfcol_train_validation_other),
+                SuperSample,
+                Sample,
+                cluster_id,
+                proportion
+            ) |>
             tidyr::pivot_wider(
-                names_from = c("Device"),
+                names_from = dfcol_grouping_samples[[1]],
                 values_from = "proportion"
             )
-
         # Generate all pairwise comparisons of devices
         device_combinations <- combn(names(device_colors), 2)
         plotlist <- list()
@@ -163,6 +189,10 @@ plot_flowsom <- function(ff_gated,
                     legend.key.size = ggplot2::unit(.5, "cm"),
                     legend.title = ggplot2::element_text(angle = -90)
                 )
+            if (!all(is.null(dfcol_train_validation_other))) {
+                p0 <- p0 +
+                    ggplot2::facet_wrap(dfcol_train_validation_other)
+            }
 
             # Add fold-change reference lines (x2, x10, x25)
             for (specific_lines in c(2, 10, 25)) {

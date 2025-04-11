@@ -22,7 +22,7 @@ plot_densities <- function(
     df,
     device_colors,
     transformlist = NULL,
-    density_n = 500,
+    density_n = 500, dfcol_grouping_samples = "Device",
     relevant_columns = NULL,
     limit_density_quantile = NA) {
     if (all(is.null(relevant_columns))) {
@@ -46,28 +46,41 @@ plot_densities <- function(
     gated_dt <- lapply(ff_gated, function(x) {
         flowCore::exprs(x) |> data.table::as.data.table()
     }) |>
-        data.table::rbindlist(idcol = "File") |>
+        data.table::rbindlist(idcol = "File", fill = TRUE) |>
         data.table::melt(id.vars = "File")
 
     gated_dt <- gated_dt[variable %in% relevant_columns]
-    compute_density <- function(x, transform_x, y) {
-        d <- density(transform_x(x), n = density_n) # 512 points for smoother curves
-        data.table::data.table(x = d$x, y = d$y)
+    compute_density <- function(x, transform_x) {
+        x_noNA <- x[!is.na(x)]
+        if (length(x_noNA) == 0) {
+            res <- data.table::data.table(x = NA_real_, y = NA_real_)
+        } else {
+            d <- density(transform_x(x_noNA), n = density_n) # 512 points for smoother curves
+            res <- data.table::data.table(x = d$x, y = d$y)
+        }
+        return(res)
     }
-    densities <- gated_dt[, compute_density(value, transformlist[[as.character(variable[[1]])]]), by = .(File, variable)]
+    densities <- gated_dt[,
+        {
+            compute_density(value, transformlist[[as.character(variable[[1]])]])
+        },
+        by = .(File, variable)
+    ]
     if (!is.na(limit_density_quantile)) {
         # Limit the density to a certain quantile within each variable
         # calculate the top quantile for each variable
         top_quantile <- densities[, quantile(y, limit_density_quantile), by = variable]
         densities <- densities[top_quantile, on = "variable"][, y := pmin(y, V1)][, V1 := NULL]
     }
-    densities <- densities[df[, c("File", "Device", "Sample")], on = "File"]
+    df_part <- data.table::data.table(df)
+    df_part <- df_part[, c("File", dfcol_grouping_samples[[1]], "Sample"), with = FALSE]
+    densities <- densities[df_part, on = "File"]
     p0 <- ggplot2::ggplot(
         densities,
-        ggplot2::aes(x = x, y = y, color = Device)
+        ggplot2::aes(x = x, y = y, color = !!rlang::sym(dfcol_grouping_samples[[1]]))
     ) +
         ggplot2::geom_line() +
-        ggplot2::geom_ribbon(ggplot2::aes(ymin = 0, ymax = y, fill = Device), alpha = 0.2) +
+        ggplot2::geom_ribbon(ggplot2::aes(ymin = 0, ymax = y, fill = !!rlang::sym(dfcol_grouping_samples[[1]])), alpha = 0.2) +
         ggh4x::facet_grid2(Sample ~ variable, scales = "free", independent = "y") +
         ggpubr::theme_pubr() +
         ggplot2::theme(

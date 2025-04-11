@@ -85,7 +85,8 @@ cycompare_outcomes_analyse <- function(
         device_colors = device_colors,
         gatingsets = gatingsets,
         gatename_primary = gatename_primary,
-        n_events_postgate = n_events_postgate
+        n_events_postgate = n_events_postgate,
+        dfcol_grouping_samples = dfcol_grouping_samples
     )
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]

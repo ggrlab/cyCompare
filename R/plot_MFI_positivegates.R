@@ -12,20 +12,10 @@
 #' @return A `ggplot2` object visualizing the transformed MFI over time for each marker.
 #' @export
 plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, transformlist = NULL, meanratio = FALSE) {
-    # Extract unique gating populations from marker_to_gate
-    relevant_gates <- unique(unlist(marker_to_gate))
 
-    # Convert marker_to_gate list into a data.table with "marker" and "pop" columns
-    marker_to_gate_dt <- lapply(marker_to_gate, data.table::as.data.table) |>
-        data.table::rbindlist(idcol = "marker")
-    data.table::setnames(marker_to_gate_dt, "V1", "pop") # Rename column
-
-    # Filter dt_count_mfi to keep only relevant gating populations
-    dt_count_mfi_relevant <- dt_count_mfi[pop %in% relevant_gates]
-    if (!nrow(dt_count_mfi_relevant) == length(relevant_gates) * length(unique(dt_count_mfi[, File]))) {
-        missing_gates <- setdiff(relevant_gates, unique(dt_count_mfi_relevant$pop))
-        warning("Not all relevant gates are present in the MFI data: \n  ", paste0(missing_gates, collapse = "  \n"))
-    }
+    tmp <- marker_to_gate_count(marker_to_gate, dt_count_mfi = dt_count_mfi)
+    marker_to_gate_dt <- tmp[["marker_to_gate_dt"]]
+    dt_count_mfi_relevant <- tmp[["dt_count_mfi_relevant"]]
 
     # Merge the filtered MFI data with marker-to-gate mappings using 'pop' as the key
     dt <- marker_to_gate_dt[dt_count_mfi_relevant, on = "pop", allow.cartesian = TRUE]
