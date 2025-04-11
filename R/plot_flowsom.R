@@ -76,7 +76,7 @@ plot_flowsom <- function(ff_gated,
     } else {
         gated_fs_transformed_train <- gated_fs_transformed
     }
-    
+
     # Perform FlowSOM clustering on the transformed data
     flowsom_all <- FlowSOM::FlowSOM(
         input = gated_fs_transformed_train,
@@ -179,7 +179,7 @@ plot_flowsom <- function(ff_gated,
                     x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2) # Mean proportion
                 )
             ) +
-                ggplot2::ggtitle(paste0(d1, " vs ", d2)) +
+                ggplot2::ggtitle(paste0(d1, " vs ", d2), subtitle = x) +
                 ggplot2::geom_abline(intercept = 0, slope = 0) + # Reference line at log2 fold-change = 0
                 ggplot2::theme_bw() +
                 ggplot2::scale_x_log10() + # Log-scale for x-axis
