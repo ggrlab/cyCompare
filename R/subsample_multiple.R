@@ -26,18 +26,24 @@ subsample_multiple <- function(
     n_subsampling = 1,
     n_subsampled_cells = 10000,
     subsampling_seed_first = 427764) {
+    # Perform subsampling independently per iteration
     unlist(
-        lapply(1:n_subsampling, function(i) {
-            fs_train_subsampled <- flowCore::fsApply(ff_list, function(x) {
-                cytobench::subsample_ff(x, n_cells = n_subsampled_cells, seed = subsampling_seed_first + i - 1)
+        lapply(seq_len(n_subsampling), function(i) {
+            fs_subsampled <- flowCore::fsApply(ff_list, function(x) {
+                cytobench::subsample_ff(
+                    x,
+                    n_cells = n_subsampled_cells,
+                    seed = subsampling_seed_first + i - 1
+                )
             })
-            # Append subsample ID to each sample name
-            flowCore::sampleNames(fs_train_subsampled) <- paste0(
-                flowCore::sampleNames(fs_train_subsampled),
-                "_subsampled",
-                i
+
+            # Label each sample with subsampling round
+            flowCore::sampleNames(fs_subsampled) <- paste0(
+                flowCore::sampleNames(fs_subsampled),
+                "_subsampled", i
             )
-            return(flowCore::flowSet_to_list(fs_train_subsampled))
+
+            flowCore::flowSet_to_list(fs_subsampled)
         })
     )
 }

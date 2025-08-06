@@ -46,21 +46,11 @@ flowsom_repeatsubsampling <- function(
     subsampling_seed_first = 427764,
     ...) {
     # --- 1. Repeatedly subsample each flowFrame ---
-    train_multiple <- unlist(
-        lapply(seq_len(n_subsampling), function(i) {
-            fs_train_subsampled <- flowCore::fsApply(ff_list, function(x) {
-                cytobench::subsample_ff(
-                    x,
-                    n_cells = n_subsampled_cells,
-                    seed = subsampling_seed_first + i - 1
-                )
-            })
-            flowCore::sampleNames(fs_train_subsampled) <- paste0(
-                flowCore::sampleNames(fs_train_subsampled),
-                "_subsampled", i
-            )
-            flowCore::flowSet_to_list(fs_train_subsampled)
-        })
+    train_multiple <- subsample_multiple(
+        ff_list = ff_list,
+        n_subsampling = n_subsampling,
+        n_subsampled_cells = n_subsampled_cells,
+        subsampling_seed_first = subsampling_seed_first
     )
 
     # --- 2. Combine all subsamples into one training set ---
