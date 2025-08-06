@@ -7,11 +7,13 @@
 #' @param outdir A character string specifying the output directory to save model results.
 #' @param result_grouping A list object containing grouping results, including phenotype proportions.
 #' @param grouping A data frame that defines grouping variables for merging with `df`.
-#' @param dfcol_train_validation_other Character vector of column names indicating data split (e.g., train/validation/test).
+#' @param dfcol_train_validation_other
+#'  Character vector of column names indicating data split (e.g., train/validation/test).
 #' @param dfcol_outcomes Character vector of outcome column names to be modeled.
 #' @param hparam_n_evaluations Integer; number of hyperparameter evaluations during model tuning. Default is 3.
 #' @param seed Integer; seed for reproducibility. Default is 42.
-#' @param learners_classification A list of mlr3 learners with tuning parameters set. Default includes a tuned `classif.ranger`.
+#' @param learners_classification
+#'  A list of mlr3 learners with tuning parameters set. Default includes a tuned `classif.ranger`.
 #' @param dv_class_positive A named vector specifying the positive class for each outcome variable.
 #' @param loss_measure An `mlr3` measure object for model evaluation. Default is classification log-loss.
 #' @param ... Additional arguments passed to `cytobench::wrapper_count_models`.
