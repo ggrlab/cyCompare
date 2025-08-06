@@ -66,6 +66,7 @@ cycompare <- function(
     xdim = 3,
     ydim = 3,
     flowsom_seed = 3711283) {
+    # --- Load or prepare data ---
     if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
         message("Loading prepared data from ", prepared_saveload)
         prepared <- qs::qread(prepared_saveload)
@@ -89,30 +90,38 @@ cycompare <- function(
             qs::qsave(prepared, prepared_saveload)
         }
     }
+
+    # Extract components from prepared list
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
     device_colors <- prepared[["device_colors"]]
     marker_to_gate <- prepared[["marker_to_gate"]]
     gatename_primary <- prepared[["gatename_primary"]]
 
-    #### 1. Basic plots
-    ## 1.1 Samples over time per device
+    # --- 1. Basic plots ---
+    ## 1.1: Samples over time per device
     p1.1 <- plot_samples_by_time(
         df,
         dfcol_grouping_supersamples = dfcol_grouping_supersamples
     )
 
-    # Plots of counts and percentages
-    p1.2_3 <- plot_counts(counts_joint, gatename_primary, device_colors)
+    ## 1.2 & 1.3: Gated cell counts and percentages
+    p1.2_3 <- plot_counts(
+        dt_count = counts_joint,
+        gatename = gatename_primary,
+        device_colors = device_colors
+    )
 
-    #### Figure 2 plots
-    # 1. Positive population MFI
+    # --- 2. MFI and density plots ---
+    ## 2.1: Median fluorescence intensity for positive populations
     p2.1 <- plot_MFI_positivegates(
         dt_count_mfi = counts_joint,
         marker_to_gate = marker_to_gate,
         device_colors = device_colors,
         transformlist = transformlist
     )
+
+    ## 2.1: Ratio version of above
     p2.1_ratio <- plot_MFI_positivegates(
         dt_count_mfi = counts_joint,
         marker_to_gate = marker_to_gate,
@@ -121,7 +130,7 @@ cycompare <- function(
         meanratio = TRUE
     )
 
-    # 2. Density plots
+    ## 2.2: Density distributions per marker/device
     p2.2 <- plot_densities(
         ff_gated = gated_ff,
         df = df,
@@ -130,7 +139,7 @@ cycompare <- function(
         relevant_columns = ff_columns_relevant
     )
 
-    # 3. OTD
+    # --- 3. Optimal Transport Distance (OTD) ---
     if (do_otd) {
         p3.1 <- plot_otd(
             ff_gated = gated_ff,
@@ -144,7 +153,7 @@ cycompare <- function(
         p3.1 <- NULL
     }
 
-    # 4 Clustering with FlowSOM
+    # --- 4. FlowSOM clustering and plots ---
     if (do_flowsom) {
         p_flowsom <- plot_flowsom(
             ff_gated = gated_ff,
@@ -161,7 +170,7 @@ cycompare <- function(
         p_flowsom <- NULL
     }
 
-
+    # --- Return all collected plots ---
     return(
         list(
             "Samples over time per device" = p1.1,
@@ -170,8 +179,8 @@ cycompare <- function(
             "Positive population MFI ratio" = p2.1_ratio,
             "Density plots" = p2.2,
             "OTD to mastersample" = p3.1,
-            "Flowsom_PCA" = p_flowsom[["plots_pca"]],
-            "Flowsom_MA" = p_flowsom[["p_MA"]]
+            "Flowsom_PCA" = if (!is.null(p_flowsom)) p_flowsom[["plots_pca"]] else NULL,
+            "Flowsom_MA" = if (!is.null(p_flowsom)) p_flowsom[["p_MA"]] else NULL
         )
     )
 }
