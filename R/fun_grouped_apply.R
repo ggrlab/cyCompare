@@ -1,25 +1,20 @@
 #' Apply a Function to Predefined Groupings of Flow Cytometry Data
 #'
-#' This function applies a user-defined function (e.g., FlowSOM training) to data
-#' across multiple groupings, typically the result of `fun_grouped()`. It allows optional conversion
-#' to a `flowSet`, supports parallel execution, and can either return the results or rely on
-#' side effects such as file output.
+#' Applies a user-defined function (e.g., FlowSOM application or modeling) to each group from `fun_grouped()` output.
+#' This supports grouped application of downstream tasks across supersample/device combinations.
 #'
+#' @inheritParams cycompare_outcomes_analyse
+#' @inheritParams fun_grouped
 #' @param data
-#' The data which should be subset. E.g.
-#'  - A named list of flowFrames, indexed by the "File" column of df.
-#' @param result_grouping A list returned from `fun_grouped()` that contains `groups` and optionally `results`.
-#' @param make_flowset Logical; if TRUE, convert `ff_list` into a `flowSet`. Default is TRUE.
-#' @param fun A function to apply to each group. It should accept at least arguments `ff_list`, `outdir`, and a grouping-specific input (e.g., `result_grouping[["results"]][[i]]`).
-#' @param outdir_base Optional string path to save results. Required if `return_results` is FALSE.
-#' @param verbose Logical; if TRUE, prints progress messages.
-#' @param return_results Logical; if FALSE, the function does not return results and assumes side effects (e.g., saving to disk).
-#' @param ... Additional arguments passed to `fun`.
+#' Named list of flowFrames or similar objects. Names must match `File` column from metadata.
+#' @param result_grouping
+#' A list returned from `fun_grouped()`, containing `groups` and optionally `results`.
+#' Can also be a list of such lists (e.g., clustering + modeling).
 #'
-#' @return A list containing:
+#' @return A named list with:
 #' \describe{
-#'   \item{results}{List of results for each grouping, or NULL if `return_results` is FALSE.}
-#'   \item{groups}{Data frame of group combinations processed.}
+#'   \item{results}{List of outputs from `fun()` per group (or `NULL` if `return_results = FALSE`).}
+#'   \item{groups}{Data frame of group combinations used.}
 #' }
 #'
 #' @export
@@ -32,24 +27,22 @@ fun_grouped_apply <- function(
     verbose = FALSE,
     return_results = TRUE,
     ...) {
-    # Ensure output directory is set when no results are returned
-
+    # Require outdir_base if results are not returned (assumes side effects)
     if (!return_results && is.null(outdir_base)) {
-        stop(
-            "If return_results is FALSE, outdir_base must be specified and the function should save the results there."
-        )
+        stop("If return_results is FALSE, outdir_base must be specified.")
     }
 
-    # Extract group definitions
+    # --- Parse result_grouping input ---
     is_result_list <- FALSE
     if ("groups" %in% names(result_grouping)) {
+        # Standard case: one set of groupings
         possible_groupings <- result_grouping[["groups"]]
         result_grouping_results <- result_grouping[["results"]]
     } else if (all(sapply(result_grouping, function(x) "groups" %in% names(x)))) {
         # If result_grouping is a list of lists, extract the first element
         all_groupings <- lapply(result_grouping, function(x) x[["groups"]])
         if (!all(sapply(all_groupings, function(x) all(x == all_groupings[[1]])))) {
-            stop("All groupings must be identical if a list of grouping results is given.")
+            stop("All groupings must be identical if a list of result_groupings is given.")
         }
         possible_groupings <- all_groupings[[1]]
         result_grouping_results <- lapply(result_grouping, function(x) x[["results"]])
@@ -57,12 +50,13 @@ fun_grouped_apply <- function(
     } else {
         stop("result_grouping must contain a 'groups' element or be a list of lists with 'groups' elements.")
     }
-    # Optionally convert input list to a flowSet
+
+    # --- Optional conversion to flowSet ---
     if (make_flowset) {
         data <- flowCore::flowSet(data)
     }
 
-    # Apply the function to each group in parallel
+    # --- Apply user function per group in parallel ---
     all_results <- future.apply::future_lapply(
         seq_len(nrow(possible_groupings)),
         future.seed = TRUE,
@@ -70,8 +64,8 @@ fun_grouped_apply <- function(
         function(grouping_i) {
             grouping_x <- possible_groupings[grouping_i, ]
 
-            # Print current grouping if verbose is enabled
             if (verbose) {
+                # Print current grouping if verbose is enabled
                 message(
                     "Processing grouping: ",
                     paste0(names(grouping_x), ".", grouping_x, collapse = "___"),
@@ -88,15 +82,15 @@ fun_grouped_apply <- function(
                 )
             }
 
+            # Extract group-specific result(s)
             if (is_result_list) {
-                # Get the result for this grouping
                 result_grouping_results_x <- lapply(result_grouping_results, function(x) {
                     x[[grouping_i]]
                 })
             } else {
-                # Get the result for this grouping
                 result_grouping_results_x <- result_grouping_results[[grouping_i]]
             }
+
             # Apply the user-defined function to this group
             res <- fun(
                 data,
@@ -110,15 +104,15 @@ fun_grouped_apply <- function(
             if (!return_results) {
                 res <- NULL
             }
-
             return(res)
         }
     )
-    # Return all results and the group combinations
+
+    # --- Return all results and the group combinations ---
     return(
         list(
-            "results" = all_results,
-            "groups" = possible_groupings
+            results = all_results,
+            groups = possible_groupings
         )
     )
 }
