@@ -1,18 +1,21 @@
 #' Calculate ROC Metrics Grouped by Metadata
 #'
-#' Computes ROC (Receiver Operating Characteristic) statistics for prediction results, grouped by specified metadata columns.
-#' The positive class label is dynamically determined per outcome using the `dv_class_positive` mapping.
+#' Computes ROC (Receiver Operating Characteristic) statistics for predicted outcomes,
+#' grouped by relevant metadata such as device, model, and outcome type.
+#' The positive class label is dynamically determined for each outcome using the `dv_class_positive` mapping.
 #'
-#' @param df Data frame input (not used but kept for compatibility).
-#' @param result_grouping A data frame containing prediction results and relevant metadata columns for grouping.
-#' @param dfcol_grouping_supersamples Character vector of column names used for higher-level grouping (e.g., "Study").
-#' @param dfcol_grouping_samples Character, name of the column used for sample-level grouping (e.g., "Device").
-#' @param dfcol_outcomes Character vector of column names representing different outcomes (e.g., `c("outcome_1", "outcome_2")`).
-#' @param dfcol_train_validation_other Character, column name that differentiates between train/validation/test sets.
-#' @param dv_class_positive Named vector specifying the positive class for each outcome (e.g., `c("outcome_1" = "A", "outcome_2" = 5.1)`).
-#' @param ... Additional arguments passed to internal functions (currently unused).
+#' @inheritParams cycompare_outcomes_analyse
+#' @param result_grouping A data frame containing prediction results and metadata columns used for grouping
+#' (e.g., `outcome_`, `model_`, `clustering_`, and those specified by `dfcol_*`).
+#' @param ... Currently unused; included for extensibility.
 #'
-#' @return A tibble containing grouped ROC metrics, including coordinates extracted at specified thresholds.
+#' @return A tibble containing grouped ROC statistics for each group defined by metadata. Includes:
+#' \itemize{
+#'   \item ROC coordinates at each group's validation threshold.
+#'   \item AUC and confidence intervals.
+#'   \item Confusion matrix-based metrics (accuracy, kappa, null accuracy, etc.).
+#'   \item Log loss and class frequencies.
+#' }
 #'
 #' @export
 #'
