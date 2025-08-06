@@ -53,12 +53,12 @@ plot_flowsom <- function(ff_gated,
 
     # If a single transformation function is provided, apply it to all markers
     if (length(transformlist) == 1) {
-        fc_transformlist <- flowCore::transformList(
+        fc_transformlist <- flowCore::transformlist(
             flowCore::colnames(gated_fs[[1]]),
             transformlist
         )
     } else {
-        fc_transformlist <- flowCore::transformList(
+        fc_transformlist <- flowCore::transformlist(
             flowCore::colnames(gated_fs[[1]]),
             transformlist
         )
@@ -81,7 +81,7 @@ plot_flowsom <- function(ff_gated,
     flowsom_all <- FlowSOM::FlowSOM(
         input = gated_fs_transformed_train,
         transform = FALSE, # Data is already transformed
-        transformList = NULL,
+        transformlist = NULL,
         nClus = nClus, # Number of clusters
         scale = scale, # Whether to scale the data
         xdim = xdim, # Grid x-dimension for SOM

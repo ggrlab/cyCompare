@@ -22,12 +22,12 @@ plot_otd <- function(ff_gated,
 
     # If a single transformation function is provided, apply it to all markers
     if (length(transformlist) == 1) {
-        fc_transformlist <- flowCore::transformList(
+        fc_transformlist <- flowCore::transformlist(
             relevant_columns,
             transformlist
         )
     } else {
-        fc_transformlist <- flowCore::transformList(
+        fc_transformlist <- flowCore::transformlist(
             relevant_columns,
             transformlist
         )

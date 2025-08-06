@@ -27,8 +27,8 @@
 #' Named list of modeling functions. Defaults to `cv.glmnet`.
 #' @param outdir_base
 #' Base directory for saving intermediate results (default: `tempdir()`).
-#' @param transformList
-#' Either a function (applied as `flowCore::transformList`) or a `transformList` object.
+#' @param transformlist
+#' Either a function (applied as `flowCore::transformlist`) or a `transformlist` object.
 #' Default: `asinh(x / 1e3)`.
 #' @param gatingsets
 #' Named list of gating sets used to extract primary populations. One gating set per sample.
@@ -74,7 +74,7 @@ cycompare_outcomes_analyse <- function(
     dfcol_outcomes = c("outcome_1", "outcome_2"),
     outcome_models = list("glmnet" = glmnet::cv.glmnet),
     outdir_base = tempdir(),
-    transformList = function(x) asinh(x / 1e3),
+    transformlist = function(x) asinh(x / 1e3),
     gatingsets,
     gatename_primary,
     n_events_postgate = 10e3,
@@ -123,20 +123,20 @@ cycompare_outcomes_analyse <- function(
     device_colors <- prepared[["device_colors"]]
 
     ### 2. Transformation (e.g. asinh)
-    if (all(is.null(transformList))) {
-        transformList <- NULL
-    } else if (is.function(transformList)) {
-        transformList <- flowCore::transformList(
+    if (all(is.null(transformlist))) {
+        transformlist <- NULL
+    } else if (is.function(transformlist)) {
+        transformlist <- flowCore::transformlist(
             from = ff_columns_relevant,
-            tfun = transformList
+            tfun = transformlist
         )
-    } else if (!"transformList" %in% class(transformList)) {
-        stop("transformList should be NULL, a function, or a transformList object")
+    } else if (!"transformlist" %in% class(transformlist)) {
+        stop("transformlist should be NULL, a function, or a transformlist object")
     }
 
-    if (!is.null(transformList)) {
+    if (!is.null(transformlist)) {
         gated_transformed_ff <- lapply(gated_ff, function(ff_x) {
-            flowCore::transform(ff_x, transformList)
+            flowCore::transform(ff_x, transformlist)
         })
     } else {
         gated_transformed_ff <- gated_ff
