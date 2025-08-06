@@ -111,8 +111,8 @@ fun_grouped_apply <- function(
     # --- Return all results and the group combinations ---
     return(
         list(
-            results = all_results,
-            groups = possible_groupings
+            "results" = all_results,
+            "groups" = possible_groupings
         )
     )
 }
