@@ -1,37 +1,36 @@
 #' Compare Flow Cytometry Data Across Devices
 #'
-#' This function performs a comparative analysis of flow cytometry data across multiple devices.
-#' It includes basic sample statistics, gating, density plots, FlowSOM clustering, and marker intensity comparisons.
+#' Performs a standardized cross-device comparison pipeline for flow cytometry data.
+#' This includes gating, marker transformation, FlowSOM clustering, density and MFI plots,
+#' and optionally optimal transport distance (OTD) analysis. Can save or load preprocessed data for efficiency.
 #'
-#' @param flowframes A named list of `flowFrame` objects containing flow cytometry data.
-#' @param df A `data.table` containing metadata with at least the columns `"File"`, `"Device"`, and `"Sample"`.
-#' @param ff_columns_relevant A character vector specifying the relevant markers for analysis.
-#' @param transformlist A transformation function or a named list of functions for transforming marker intensities
-#'        (default: `asinh(x / 1e3)`).
-#' @param gatingsets A named list of gating sets for each dataset.
-#' @param gatename_primary A character string specifying the primary gating population.
-#' @param n_events_postgate An integer specifying the maximum number of events to keep post-gating.
-#' @param marker_to_gate A named vector mapping marker names to their corresponding gates.
-#' @param postgate_sample_seed An integer seed for random sampling of events after gating (default: `42`).
-#' @param prepared_saveload A character string specifying the file path to save or load (if exists) prepared data.
-#' @param device_colors A named vector or function that provides colors for each device.
-#'        If a function is provided, it should take the number of devices as input and return a vector of colors.
-#' @param nClus An integer specifying the number of clusters for FlowSOM clustering (default: 5).
-#' @param scale A logical indicating whether to scale the data in FlowSOM clustering (default: `FALSE`).
+#' @inheritParams cycompare_outcomes_analyse
+#' @param postgate_sample_seed Integer seed used for reproducible post-gating subsampling (default: 42).
+#' @param prepared_saveload Optional character path. If the file exists, will load preprocessed data with `qs::qread()`; if not, will save it after processing using `qs::qsave()`.
+#' @param nClus Number of clusters for FlowSOM (default: 5).
+#' @param scale Logical, whether to scale markers for FlowSOM (default: `FALSE`).
 #' @param xdim An integer specifying the x-dimension of the FlowSOM grid (default: 3).
 #' @param ydim An integer specifying the y-dimension of the FlowSOM grid (default: 3).
-#' @param seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
-#' @param ... Additional parameters passed to `plot_flowsom()`.
+#' @param do_otd Logical. Whether to perform optimal transport distance (OTD) comparison (default: `TRUE`).
+#' @param OTD_kwargs_loss Named list of arguments for the OTD loss function.
+#' @param do_flowsom Logical. Whether to perform FlowSOM clustering and plot comparisons (default: `TRUE`).
+#' @param flowsom_seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
+#' @param ... Passed to `plot_flowsom()` (e.g., plotting customization).
 #'
-#' @return A named list of ggplot2 objects containing:
-#'   \item{"Samples over time per device"}{A plot showing the number of samples collected over time per device.}
-#'   \item{"Counts and percentages"}{Plots of gated cell counts and percentages per sample.}
-#'   \item{"Positive population MFI"}{Plots showing the median fluorescence intensity (MFI) of positive gated populations.}
-#'   \item{"Density plots"}{Density distributions of marker intensities across devices and samples.}
-#'   \item{"Flowsom_PCA"}{Principal Component Analysis (PCA) plots of FlowSOM clustering results.}
-#'   \item{"Flowsom_MA"}{MA plots comparing cluster proportions between devices.}
+#' @return A named list of `ggplot2` plots:
+#' \describe{
+#'   \item{Samples over time per device}{Number of samples per device over time.}
+#'   \item{Counts and percentages}{Per-sample cell counts and gated proportions.}
+#'   \item{Positive population MFI}{MFI values of gated markers across devices.}
+#'   \item{Positive population MFI ratio}{Ratio of MFI values across devices.}
+#'   \item{Density plots}{Marker intensity distributions for each device.}
+#'   \item{OTD to mastersample}{Pairwise distances between devices or conditions.}
+#'   \item{Flowsom_PCA}{Cluster-level PCA across samples.}
+#'   \item{Flowsom_MA}{Mean-vs-difference cluster abundance plots.}
+#' }
 #'
 #' @export
+#'
 cycompare <- function(
     flowframes,
     df,
@@ -66,7 +65,7 @@ cycompare <- function(
     scale = FALSE,
     xdim = 3,
     ydim = 3,
-    seed = 3711283) {
+    flowsom_seed = 3711283) {
     if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
         message("Loading prepared data from ", prepared_saveload)
         prepared <- qs::qread(prepared_saveload)
@@ -156,7 +155,7 @@ cycompare <- function(
             scale = scale,
             xdim = xdim,
             ydim = ydim,
-            seed = seed
+            seed = flowsom_seed
         )
     } else {
         p_flowsom <- NULL
