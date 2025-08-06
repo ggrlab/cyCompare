@@ -2,7 +2,7 @@
 % Please edit documentation in R/cycompare_outcomes_analyse.R
 \name{cycompare_outcomes_analyse}
 \alias{cycompare_outcomes_analyse}
-\title{Core Analysis of Flow Cytometry Data Across Devices with outcomes}
+\title{Core Analysis Pipeline for Flow Cytometry Outcomes Across Devices}
 \usage{
 cycompare_outcomes_analyse(
   flowframes,
@@ -35,56 +35,58 @@ cycompare_outcomes_analyse(
 )
 }
 \arguments{
-\item{flowframes}{A named list of \code{flowFrame} objects containing flow cytometry data.}
+\item{flowframes}{Named list of \code{flowFrame} objects with raw FCM data. Names must match entries in \code{df$File}.}
 
-\item{df}{A \code{data.table} with metadata. Must contain columns specified in \verb{dfcol_*} parameters and \code{File} as unique column linking to \code{names(flowframes)}.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*} and a unique \code{File} column.}
 
-\item{ff_columns_relevant}{Character vector of markers to use for analysis and clustering.}
+\item{ff_columns_relevant}{Character vector of marker/feature columns to use for clustering and modeling.}
 
-\item{dfcol_grouping_supersamples}{Metadata column used to define supersample groups (e.g., "Study").}
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).}
 
-\item{dfcol_grouping_samples}{Metadata column used to group samples (e.g., "Device").}
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).}
 
-\item{dfcol_train_validation_other}{Column defining sample roles ("train", "test", etc.).}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{dfcol_outcomes}{Character vector of column names containing outcome variables.}
+\item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
-\item{outcome_models}{Named list of modeling functions, defaulting to \code{cv.glmnet}.}
+\item{outcome_models}{Named list of modeling functions. Defaults to \code{cv.glmnet}.}
 
 \item{outdir_base}{Base directory for saving intermediate results (default: \code{tempdir()}).}
 
-\item{transformList}{A transformation function or a \code{flowCore::transformList} object (default: \code{asinh(x / 1e3)}).}
+\item{transformList}{Either a function (applied as \code{flowCore::transformList}) or a \code{transformList} object. Default: \code{asinh(x / 1e3)}.}
 
-\item{gatingsets}{A named list of gating sets, one per dataset.}
+\item{gatingsets}{Named list of gating sets used to extract primary populations.}
 
-\item{gatename_primary}{Character string indicating the population used for downstream analysis.}
+\item{gatename_primary}{String specifying the gate used for downstream data (e.g., \code{"CD3+"}).}
 
-\item{n_events_postgate}{Maximum number of events per sample to retain after gating.}
+\item{n_events_postgate}{Maximum number of events to retain per sample after gating (default: 10,000).}
 
-\item{marker_to_gate}{Named vector mapping marker names to gate names.}
+\item{marker_to_gate}{Named vector mapping markers to their respective gate names.}
 
-\item{device_colors}{Either a named vector or a function that generates colors for each device.}
+\item{device_colors}{Either a named vector or function returning colors for each device.}
 
-\item{clustering_n_subsampling}{Number of repeated subsamplings for FlowSOM (default: 1).}
+\item{clustering_n_subsampling}{Number of FlowSOM subsampling repeats (default: 1).}
 
-\item{clustering_n_subsampled_cells}{Number of cells per sample for FlowSOM (default: 10,000).}
+\item{clustering_n_subsampled_cells}{Number of cells per sample to use per subsample (default: 10,000).}
 
-\item{clustering_subsampling_seed_first}{Seed for the first subsampling (default: 42).}
+\item{clustering_subsampling_seed_first}{Seed for the first clustering repeat (default: 42).}
 
-\item{kwargs_flowsom}{Named list of additional FlowSOM parameters (e.g. \code{nClus}, \code{scale}, \code{xdim}, \code{ydim}, \code{seed}).}
+\item{kwargs_flowsom}{Named list of FlowSOM parameters (e.g., \code{nClus}, \code{xdim}, \code{ydim}, \code{seed}, etc.).}
 
-\item{kwargs_modelling}{Named list of model training parameters (e.g., learners, tuning, seed).}
+\item{kwargs_modelling}{Named list of modeling parameters (e.g., learners, tuning, loss function).}
+
+\item{dv_class_positive}{Named vector specifying the positive class for each outcome (e.g., \code{c("outcome_1" = "A", "outcome_2" = 5.1)}).}
 }
 \value{
-A named list with three main components:
+A named list with the following structure:
 \describe{
-\item{prepared_data}{List with transformed flowFrames, counts, and device colors.}
-\item{clustering}{List with FlowSOM models trained on training data and applied to all samples.}
-\item{models}{List with outcome models trained and applied to clustering results.}
+\item{prepared_data}{Transformed flowFrames, cell counts, and device colors.}
+\item{clustering}{FlowSOM models trained on training data and applied to all samples.}
+\item{models}{Trained models and their predictions across all samples.}
 }
 }
 \description{
-This function performs preprocessing, transformation, FlowSOM clustering, and predictive modeling
-on flow cytometry data to compare devices and generate outcome-based insights.
-It returns intermediate structured data ready for downstream plotting or reporting.
+Performs a full pipeline for outcome prediction across multiple flow cytometry devices.
+This includes data preprocessing (gating, transformation), FlowSOM clustering, and outcome modeling.
+The function returns results that can be directly used for downstream statistical analysis or plotting.
 }
