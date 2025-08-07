@@ -80,13 +80,7 @@ plot_densities <- function(
     }
 
     # Convert single transform function to named list if needed
-    if (length(transformlist) == 1 && !is.null(transformlist)) {
-        if (is.function(transformlist)) {
-            transformlist <- list(transformlist)
-        }
-        transformlist <- setNames(rep(transformlist, length(relevant_columns)), relevant_columns)
-    }
-
+    transformlist <- transformlist_named(transformlist, relevant_columns)
     # Apply identity function to unused columns to keep them unchanged
     for (col_x in flowCore::colnames(ff_gated[[1]])[!flowCore::colnames(ff_gated[[1]]) %in% relevant_columns]) {
         transformlist[[col_x]] <- identity

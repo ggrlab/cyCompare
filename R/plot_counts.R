@@ -39,15 +39,12 @@
 #' # Display the plots
 #' plots$count # Raw count over time
 #' plots$percentage # Percentage of root over time
-
 #'
 #' @export
 plot_counts <- function(dt_counts, populations = NULL, device_colors = NULL) {
     pop <- Percentage_total <- count <- root_count <- Time <- Device <- NULL # For data.table compatibility
     # Step 1: Fallback to all populations if none specified
     if (all(is.null(populations))) {
-        # Todo: Before, this was dt_counts$name, why?
-        browser()
         populations <- unique(dt_counts$pop)
     }
 
