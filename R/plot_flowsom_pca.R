@@ -15,10 +15,7 @@ plot_flowsom_pca <- function(fs_pred,
                              dfcol_train_validation_other = NULL) {
     lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
-
-        # Center & scale data (except for sample column)
-        x_data_scaled <- scale(dplyr::select(x_data, -sample), center = TRUE, scale = TRUE)
-
+        x_scaled <- scale(dplyr::select(x_data, -sample), center = TRUE, scale = TRUE)
         # Remove columns with constant values (zero variance)
         x_data_scaled_noconstant.cols <- x_data_scaled[, !is.na(apply(x_data_scaled, 2, var))]
 
@@ -26,7 +23,7 @@ plot_flowsom_pca <- function(fs_pred,
         res_pca <- stats::prcomp(x_data_scaled_noconstant.cols, scale = FALSE)
 
         # Generate PCA plot using ggfortify
-        p0 <- ggfortify:::autoplot.prcomp(
+        p <- ggfortify:::autoplot.prcomp(
             res_pca,
             data = df,
             colour = dfcol_grouping_samples[[1]],
@@ -34,16 +31,12 @@ plot_flowsom_pca <- function(fs_pred,
         ) +
             ggpubr::theme_pubr() +
             ggplot2::theme(legend.position = "top") +
-            ggplot2::labs(
-                title = "PCA of FlowSOM",
-                subtitle = x
-            )
+            ggplot2::labs(title = "PCA of FlowSOM", subtitle = x)
 
-        # Apply manual color palette if given
         if (!all(is.null(device_colors))) {
-            p0 <- p0 + ggplot2::scale_color_manual(values = device_colors)
+            p <- p + ggplot2::scale_color_manual(values = device_colors)
         }
 
-        return(p0)
+        p
     })
 }
