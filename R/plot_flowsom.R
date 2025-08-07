@@ -1,42 +1,61 @@
-#' Generate FlowSOM Clustering and Visualization for Flow Cytometry Data
+#' Perform FlowSOM Clustering and Generate Device-Comparative Plots
 #'
-#' This function performs FlowSOM clustering on gated flow cytometry data and
-#' generates PCA and MA plots for visualization.
+#' This function clusters gated flow cytometry data using FlowSOM and generates PCA and MA plots
+#' to compare cluster distributions across devices. Optionally, only a training subset of the data
+#' can be used for clustering.
 #'
 #' @param ff_gated A list of `flowFrame` objects containing gated flow cytometry data.
-#' @param df A `data.table` containing metadata with at least the columns `"File"`, `"Device"`, and `"Sample"`.
-#' @param device_colors A named vector of colors for each device to use in the plots.
-#' @param transformlist A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.
-#' @param nClus An integer specifying the number of clusters for FlowSOM.
-#' @param scale A logical indicating whether to scale the data in FlowSOM clustering .
-#' @param xdim An integer specifying the x-dimension of the FlowSOM grid.
-#' @param ydim An integer specifying the y-dimension of the FlowSOM grid.
-#' @param seed An integer specifying the random seed for FlowSOM clustering .
-#' @param ... Additional parameters passed to `FlowSOM::FlowSOM()`. Todo: THIS failed and is not used right now
-#'
-#' @return A list containing:
-#'   \item{plots_pca}{A list of PCA plots for each clustering result, colored by device.}
-#'   \item{p_MA}{A list of MA plots comparing cluster proportions between devices.}
+#' @param df A `data.table` with metadata, containing at least the columns `"File"`, `dfcol_grouping_samples`, and `"Sample"`.
+#' @param device_colors A named vector assigning a color to each device. Used in plots.
+#' @param transformlist A list of transformation functions per marker. If a single function is given, it is applied to all markers.
+#' @param nClus Integer specifying the number of clusters for FlowSOM.
+#' @param scale Logical. If `TRUE`, scales the data before clustering.
+#' @param xdim Integer. X-dimension of the FlowSOM grid.
+#' @param ydim Integer. Y-dimension of the FlowSOM grid.
+#' @param seed Integer. Random seed for reproducibility.
+#' @param dfcol_grouping_samples Character scalar specifying the column in `df` used to group samples in PCA plots (default: `"Device"`).
+#' @param dfcol_train_validation_other Optional character scalar. If set, this column is used to select the training subset (`"train"`) for clustering and to shape/facet the plots.
+#' @return A named list with two elements:
+#'   \item{plots_pca}{A list of PCA plots showing clustering results colored by device.}
+#'   \item{p_MA}{A list of MA plots comparing cluster proportions across devices.}
 #'
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Example usage:
-#' plot_results <- plot_flowsom(
-#'     ff_gated = my_ff_list,
-#'     df = metadata_dt,
-#'     device_colors = my_colors,
-#'     transformlist = my_transform_functions
+#' # Simulate flow cytometry data
+#' fs <- cytobench::simulate_fs(
+#'     n_samples = 4,
+#'     ncells = 250,
+#'     columns = c("CD4", "CD8", "CD3")
 #' )
 #'
-#' # Access PCA plots
-#' plot_results$plots_pca[[1]]
+#' # Create metadata for each sample
+#' df_meta <- data.table::data.table(
+#'     File = flowCore::sampleNames(fs),
+#'     Device = c("A", "A", "B", "B"),
+#'     Sample = c("S1", "S2", "S1", "S2"),
+#'     TrainTest = c("train", "train", "test", "test")
+#' )
 #'
-#' # Access MA plots
-#' plot_results$p_MA[[1]]
-#' }
+#' # Define color palette for devices
+#' device_cols <- c("A" = "steelblue", "B" = "firebrick")
 #'
+#' # Run FlowSOM clustering and generate plots
+#' result <- plot_flowsom(
+#'     ff_gated = fs,
+#'     df = df_meta,
+#'     device_colors = device_cols,
+#'     transformlist = function(x) asinh(x / 1000),
+#'     nClus = 4,
+#'     dfcol_grouping_samples = "Device",
+#'     dfcol_train_validation_other = "TrainTest"
+#' )
+#'
+#' # Show first PCA plot
+#' print(result$plots_pca[[1]])
+#'
+#' # Show first MA plot (first device combination, first clustering)
+#' print(result$p_MA[[1]][[1]])
 plot_flowsom <- function(ff_gated,
                          df,
                          device_colors = NULL,
@@ -47,27 +66,27 @@ plot_flowsom <- function(ff_gated,
                          ydim = 3,
                          seed = 3711283,
                          dfcol_grouping_samples = "Device",
-                         dfcol_train_validation_other = NULL) {
-    # Convert the list of flowFrames into a flowSet
-    gated_fs <- flowCore::flowSet(ff_gated)
-
-    # If a single transformation function is provided, apply it to all markers
-    if (length(transformlist) == 1) {
-        fc_transformlist <- flowCore::transformlist(
-            flowCore::colnames(gated_fs[[1]]),
-            transformlist
-        )
+                         dfcol_train_validation_other = NULL,
+                         MA_horizontal_lines_FC = c(2, 10, 25),
+                         MA_bins = 100) {
+    File <- SuperSample <- Sample <- cluster_id <- proportion <- count <- NULL # R CMD check compatibility
+    # Convert list of flowFrames into a flowSet for transformation
+    if ("flowSet" %in% class(ff_gated)) {
+        gated_fs <- ff_gated
     } else {
-        fc_transformlist <- flowCore::transformlist(
-            flowCore::colnames(gated_fs[[1]]),
-            transformlist
-        )
+        gated_fs <- flowCore::flowSet(ff_gated)
     }
 
+    # Apply the transformation: use same function for all markers if a single function is provided
+    fc_transformlist <- flowCore::transformList(
+        flowCore::colnames(gated_fs[[1]]),
+        transformlist_named(transformlist, flowCore::colnames(gated_fs[[1]]))
+    )
 
-    # Apply transformation to the flowSet
+    # Transform the flowSet using the provided transformlist
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)
 
+    # Subset to training samples if specified
     if (!all(is.null(dfcol_train_validation_other))) {
         gated_fs_transformed_train <- gated_fs_transformed[
             dplyr::filter(df, !!rlang::sym(dfcol_train_validation_other) == "train") |>
@@ -77,34 +96,32 @@ plot_flowsom <- function(ff_gated,
         gated_fs_transformed_train <- gated_fs_transformed
     }
 
-    # Perform FlowSOM clustering on the transformed data
+    # Run FlowSOM clustering on the transformed training data
     flowsom_all <- FlowSOM::FlowSOM(
         input = gated_fs_transformed_train,
-        transform = FALSE, # Data is already transformed
-        transformlist = NULL,
-        nClus = nClus, # Number of clusters
-        scale = scale, # Whether to scale the data
-        xdim = xdim, # Grid x-dimension for SOM
-        ydim = ydim, # Grid y-dimension for SOM
-        seed = seed # Set random seed for reproducibility
+        transform = FALSE, # Already transformed above
+        transformList = NULL,
+        nClus = nClus,
+        scale = scale,
+        xdim = xdim,
+        ydim = ydim,
+        seed = seed
     )
 
-    # Predict cluster assignments for the input data
+    # Predict cluster assignments on all transformed data
     fs_pred <- cytobench::flowSOM_predict(flowsom_all, gated_fs_transformed)
 
-    # Generate PCA plots for FlowSOM clusters
+    # --- PCA Plots ---
     plots_pca <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
 
-        # scale scales per column
-        x_data_scaled <- scale(
-            x_data |>
-                dplyr::select(-sample),
-            center = TRUE, scale = TRUE
-        )
-        # variance is NA if all values are the same
+        # Center & scale data (except for sample column)
+        x_data_scaled <- scale(dplyr::select(x_data, -sample), center = TRUE, scale = TRUE)
+
+        # Remove columns with constant values (zero variance)
         x_data_scaled_noconstant.cols <- x_data_scaled[, !is.na(apply(x_data_scaled, 2, var))]
-        # Perform PCA on cluster abundance data
+
+        # PCA on normalized cluster proportions
         res_pca <- stats::prcomp(x_data_scaled_noconstant.cols, scale = FALSE)
 
         # Generate PCA plot using ggfortify
@@ -121,35 +138,35 @@ plot_flowsom <- function(ff_gated,
                 subtitle = x
             )
 
-
-        # Apply custom device colors if provided
+        # Apply manual color palette if given
         if (!all(is.null(device_colors))) {
-            p0 <- p0 +
-                ggplot2::scale_color_manual(values = device_colors)
+            p0 <- p0 + ggplot2::scale_color_manual(values = device_colors)
         }
+
+        return(p0)
     })
 
-    ## Generate MA plots to compare cluster proportions between devices
+    # --- MA Plots ---
     p_MA <- lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
-        x_data_numeric <- x_data |> dplyr::select(-sample)
+        x_data_numeric <- dplyr::select(x_data, -sample)
 
-        # Compute cluster proportions per sample
+        # Compute within-sample proportions
         proportions <- sweep(x_data_numeric, 1, rowSums(x_data_numeric), "/")
         x_data[, -1] <- proportions
 
-        # Merge with metadata
+        # Join with metadata
         x_data_df <- dplyr::left_join(x_data, df, by = c("sample" = "File"))
 
-        # Convert data to long format for visualization
-        x_data_df_long <- x_data_df |>
-            tidyr::pivot_longer(
-                cols = tidyr::all_of(grep(colnames(x_data_df), pattern = "[cC]luster", value = TRUE)),
-                names_to = "cluster_id",
-                values_to = "proportion"
-            )
+        # Pivot to long format
+        x_data_df_long <- tidyr::pivot_longer(
+            x_data_df,
+            cols = tidyr::all_of(grep(colnames(x_data_df), pattern = "[cC]luster", value = TRUE)),
+            names_to = "cluster_id",
+            values_to = "proportion"
+        )
 
-        # Reshape data to compare proportions per device
+        # Wide format for per-device comparison
         x_data_df_persample <- x_data_df_long |>
             dplyr::select(
                 !!rlang::sym(dfcol_grouping_samples[[1]]),
@@ -163,39 +180,46 @@ plot_flowsom <- function(ff_gated,
                 names_from = dfcol_grouping_samples[[1]],
                 values_from = "proportion"
             )
-        # Generate all pairwise comparisons of devices
+
+        # All pairwise device comparisons
         device_combinations <- combn(names(device_colors), 2)
         plotlist <- list()
+
         for (combination_i in seq_len(ncol(device_combinations))) {
             device_combination <- device_combinations[, combination_i]
             d1 <- device_combination[1]
             d2 <- device_combination[2]
 
-            # Create an MA plot (log-ratio vs mean) for cluster proportions
+            # Generate MA plot (log2 fold-change vs average)
             p0 <- ggplot2::ggplot(
                 x_data_df_persample,
                 ggplot2::aes(
-                    y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)), # Log fold-change
-                    x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2) # Mean proportion
+                    y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)),
+                    x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2)
                 )
             ) +
                 ggplot2::ggtitle(paste0(d1, " vs ", d2), subtitle = x) +
-                ggplot2::geom_abline(intercept = 0, slope = 0) + # Reference line at log2 fold-change = 0
+                ggplot2::geom_abline(intercept = 0, slope = 0) +
                 ggplot2::theme_bw() +
-                ggplot2::scale_x_log10() + # Log-scale for x-axis
+                ggplot2::scale_x_log10() +
                 ggplot2::theme(
                     axis.text.x = ggplot2::element_text(size = 6),
                     legend.position = "right",
                     legend.key.size = ggplot2::unit(.5, "cm"),
                     legend.title = ggplot2::element_text(angle = -90)
                 )
+            minimum_x_value <- min(
+                x_data_df_persample[[d1]],
+                x_data_df_persample[[d2]],
+                na.rm = TRUE
+            )
+            # Facet by train/test if applicable
             if (!all(is.null(dfcol_train_validation_other))) {
-                p0 <- p0 +
-                    ggplot2::facet_wrap(dfcol_train_validation_other)
+                p0 <- p0 + ggplot2::facet_wrap(dfcol_train_validation_other)
             }
 
-            # Add fold-change reference lines (x2, x10, x25)
-            for (specific_lines in c(2, 10, 25)) {
+            # Add horizontal reference lines for fold-changes (e.g., x2, x10, x25)
+            for (specific_lines in MA_horizontal_lines_FC) {
                 p0 <- p0 +
                     ggplot2::geom_hline(
                         yintercept = c(-log2(specific_lines), log2(specific_lines)),
@@ -203,32 +227,29 @@ plot_flowsom <- function(ff_gated,
                     ) +
                     ggplot2::annotate(
                         "text",
-                        x = -Inf, y = log2(specific_lines),
+                        x = minimum_x_value, y = log2(specific_lines),
                         label = paste0("x", specific_lines),
-                        hjust = 0, vjust = 0, size = 2.5
+                        hjust = 0, vjust = 0, size = 5 # 2.5
                     )
             }
 
-            # Overlay density information using a 2D histogram
+            # Add density information via 2D binning
             plotlist[[combination_i]] <- p0 +
                 ggplot2::stat_bin_2d(
-                    ggplot2::aes(fill = log10(ggplot2::after_stat(count))), # Log-transformed count for coloring
-                    bins = 100,
-                    geom = "raster"
+                    ggplot2::aes(fill = log10(ggplot2::after_stat(count) + 1)),
+                    bins = MA_bins,
+                    geom = "tile"
                 ) +
-                ggplot2::labs(
-                    fill = "Log10(n cells for each cluster and sample)"
-                ) +
+                ggplot2::labs(fill = "Log10(n cells +1)") +
                 ggplot2::scale_fill_viridis_c(na.value = NA)
         }
+
         return(plotlist)
     })
 
-    # Return both PCA and MA plots as a list
-    return(
-        list(
-            plots_pca = plots_pca, # List of PCA plots
-            p_MA = p_MA # List of MA plots
-        )
-    )
+    # Return plots
+    return(list(
+        plots_pca = plots_pca,
+        p_MA = p_MA
+    ))
 }
