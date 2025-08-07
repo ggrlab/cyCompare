@@ -1,13 +1,23 @@
-#' Compute Earth Mover's Distance (EMD) Between Matrices via Histograms
+#' Compute Histogram-Based Distance Between Two Matrices
 #'
-#' Computes the Earth Mover's Distance (EMD) between corresponding columns of two matrices
-#' by binning values into histograms and comparing them using a specified EMD function.
+#' This function converts each column of two numeric matrices into histograms using a shared global binning scheme,
+#' then computes a distance (e.g., Earth Mover's Distance) between the histogrammed representations using a supplied
+#' `lossfun`. It is useful for comparing sample distributions.
 #'
-#' @param mat1 A numeric matrix, where each column represents a variable or measurement.
-#' @param mat2 A second numeric matrix of the same dimensions as `mat1`.
+#' @param mat1
+#' A numeric matrix. Each column represents a variable (e.g., marker) and rows are observations (e.g., cells).
+#' @param mat2
+#' A second numeric matrix, same shape and interpretation as `mat1`.
+#' @param n_breaks Integer (default: 100). Number of histogram bins to use. Must be at least 3.
+#' @param lossfun
+#' A function that takes two matrices of binned counts and computes a loss. Default is `lossfun_hist_weighted`.
+#' @param ...
+#' Additional arguments passed to `lossfun`.
+
 #' @param n_breaks Integer. Number of histogram bins to use (default is 100).
 #' @param emd_fun A function to compute the Earth Mover's Distance between two binned distributions.
-#'   Must accept two matrices of equal shape and return a numeric scalar. Default is `emdist::emd2d`.
+#'  Must accept two matrices of equal shape and return a numeric scalar. Default is `lossfun_hist_weighted`
+#'  which uses `emdist::emd2d`.
 #' @param ... Additional arguments passed to `emd_fun`.
 #'
 #' @return A numeric value: the EMD between `mat1` and `mat2` over all columns.
@@ -18,11 +28,10 @@
 #' EMD is then computed between the two matrices by applying `emd_fun()` to the binned data.
 #'
 #' @examples
-#' \dontrun{
-#' mat1 <- matrix(rnorm(1000), ncol = 10)
-#' mat2 <- matrix(rnorm(1000, mean = 1), ncol = 10)
-#' lossfun_emd(mat1, mat2)
-#' }
+#' mat1 <- matrix(rnorm(50), ncol = 10)
+#' mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+#' lossfun_hist(mat1, mat2)
+#' lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_cytonorm)
 #'
 #' @export
 lossfun_hist <- function(
@@ -33,13 +42,6 @@ lossfun_hist <- function(
     if (n_breaks < 3) {
         stop("n_breaks must be at least 3. With 2 breaks (-> min and max), all values are in the same bin.")
     }
-
-    # Handle potential override of n_breaks via ...
-    extra_args <- list(...)
-    if ("n_breaks" %in% names(extra_args)) {
-        n_breaks <- extra_args$n_breaks
-    }
-
 
     # Combine matrices and compute global histogram breaks
     matlist <- list(mat1, mat2)
@@ -94,6 +96,13 @@ lossfun_hist <- function(
 #' @seealso \code{\link[emdist]{emd2d}}, \code{\link{lossfun_hist}}
 #'
 #' @export
+#' @examples
+#' mat1 <- matrix(rnorm(50), ncol = 10)
+#' mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+#' lossfun_hist_cytonorm(mat1, mat2)
+#' # Usually you would not use this function directly, but rather
+#' # use lossfun_hist() which calls this internally.
+#' lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_cytonorm)
 lossfun_hist_cytonorm <- function(x, y, ...) {
     paramlist <- list(...)
     # ydist holds the width of a single bin
@@ -102,6 +111,13 @@ lossfun_hist_cytonorm <- function(x, y, ...) {
 }
 #' @rdname lossfun_hist_cytonorm
 #' @export
+#' @examples
+#' mat1 <- matrix(rnorm(50), ncol = 10)
+#' mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+#' lossfun_hist_weighted(mat1, mat2)
+#' # Usually you would not use this function directly, but rather
+#' # use lossfun_hist() which calls this internally.
+#' lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted)
 lossfun_hist_weighted <- function(x, y, ...) {
     paramlist <- list(...)
     do.call(emdist::emd2d, c(list(x, y, dist = "euclidean"), paramlist))

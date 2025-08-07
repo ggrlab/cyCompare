@@ -172,7 +172,7 @@ cycompare_outcomes_plot <- function(
                     ggplot2::scale_color_manual(values = device_colors) +
                     ggpubr::theme_pubclean() +
                     ggplot2::theme(
-                        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+                        axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1)
                     ) +
                     ggplot2::labs(
                         shape = current_outcome,

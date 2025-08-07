@@ -106,34 +106,46 @@ cycompare_outcomes_analyse <- function(
         ),
         loss_measure = mlr3::msr("classif.logloss")
     ),
-    dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1)) {
-    ### 1. Gating and preparation
-    prepared <- cycompare_preparation(
-        flowframes = flowframes,
-        df = df,
-        ff_columns_relevant = ff_columns_relevant,
-        device_colors = device_colors,
-        gatingsets = gatingsets,
-        gatename_primary = gatename_primary,
-        n_events_postgate = n_events_postgate,
-        dfcol_grouping_samples = dfcol_grouping_samples
-    )
+    model_counts_proportions = c("counts", "proportions"),
+    model_which_elements = c("metaCluster"),
+    dv_class_positive = c("outcome_1" = "A", "outcome_2" = 5.1),
+    prepared_saveload = FALSE,
+    postgate_sample_seed = 42) {
+    # --- Load or prepare data ---
+    if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
+        message("Loading prepared data from ", prepared_saveload)
+        prepared <- qs::qread(prepared_saveload)
+    } else {
+        prepared <- cycompare_preparation(
+            flowframes = flowframes,
+            df = df,
+            ff_columns_relevant = ff_columns_relevant,
+            device_colors = device_colors,
+            gatingsets = gatingsets,
+            gatename_primary = gatename_primary,
+            n_events_postgate = n_events_postgate,
+            seed = postgate_sample_seed,
+            transformlist = transformlist,
+            dfcol_grouping_samples = dfcol_grouping_samples,
+            dfcol_train_validation_other = dfcol_train_validation_other,
+            dfcol_grouping_supersamples = dfcol_grouping_supersamples,
+            marker_to_gate = marker_to_gate
+        )
+        if (is.character(prepared_saveload)) {
+            qs::qsave(prepared, prepared_saveload)
+        }
+    }
+
     gated_ff <- prepared[["gated_ff"]]
     counts_joint <- prepared[["counts_joint"]]
     device_colors <- prepared[["device_colors"]]
 
     ### 2. Transformation (e.g. asinh)
-    if (all(is.null(transformlist))) {
-        transformlist <- NULL
-    } else if (is.function(transformlist)) {
-        transformlist <- flowCore::transformList(
-            from = ff_columns_relevant,
-            tfun = transformlist
-        )
-    } else if (!"transformlist" %in% class(transformlist)) {
-        stop("transformlist should be NULL, a function, or a transformlist object")
-    }
-
+    transformlist <- transformlist_named(
+        transformlist = transformlist,
+        relevant_columns = ff_columns_relevant,
+        flowcore = TRUE
+    )
     if (!is.null(transformlist)) {
         gated_transformed_ff <- lapply(gated_ff, function(ff_x) {
             flowCore::transform(ff_x, transformlist)
@@ -204,6 +216,16 @@ cycompare_outcomes_analyse <- function(
     #   - merges the df with the clustering results by group
     #   - trains models using the with cytobench::wrapper_count_models. This also ensures proper training/validation/test USAGE, not SPLITTING!
     # nolint end
+    if (model_counts_proportions[1] == "counts") {
+        model_counts_proportions <- "ncells_per_x"
+    } else if (model_counts_proportions[1] == "proportions") {
+        # proportions_per_x is the default, so no need to change if it is already
+        # set to "proportions_per_x"
+        model_counts_proportions <- "proportions_per_x"
+    } else {
+        stop("model_counts_proportions must be either 'counts' or 'proportions'.")
+    }
+
     model_fs <- do.call(
         fun_grouped_apply,
         c(
@@ -217,7 +239,9 @@ cycompare_outcomes_analyse <- function(
                 return_results = TRUE,
                 dfcol_train_validation_other = dfcol_train_validation_other,
                 dfcol_outcomes = dfcol_outcomes,
-                dv_class_positive = dv_class_positive
+                dv_class_positive = dv_class_positive,
+                counts_proportions = model_counts_proportions,
+                which_elements = model_which_elements
             ),
             kwargs_modelling
         )
@@ -244,6 +268,7 @@ cycompare_outcomes_analyse <- function(
                 return_results = TRUE,
                 dfcol_train_validation_other = dfcol_train_validation_other,
                 dfcol_outcomes = dfcol_outcomes,
+                counts_proportions = model_counts_proportions,
                 bygroup = FALSE
             ),
             kwargs_modelling

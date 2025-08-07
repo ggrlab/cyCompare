@@ -34,6 +34,7 @@ models_grouped_apply <- function(
     grouping,
     dfcol_train_validation_other,
     dfcol_outcomes,
+    counts_proportions = "proportions_per_x",
     bygroup = FALSE,
     ...) {
     # If bygroup is TRUE, only keep rows matching grouping
@@ -51,34 +52,27 @@ models_grouped_apply <- function(
         df_in_group <- df
     }
 
-    # Todo: Why do I exclusively use "metaCluster" here?
-    browser()
-    # Get phenotype proportions per file from result_grouping
-    clustering_df <- result_grouping[["clustering"]][["proportions_per_x"]][["metaCluster"]]
-
     # Retrieve trained models
-    # Todo: I think final_models is more useful, but still hardcoded? is that intended?
-    browser()
     models <- result_grouping[["models"]][["final_models"]]
 
-    # Join phenotype cluster proportions with input data
-    df_in_group_pheno_values <- dplyr::left_join(df_in_group, clustering_df, by = "File")
 
     # Apply all models across all outcomes and clusterings
     predictions_long <- sapply(names(models), simplify = FALSE, function(outcome_x) {
         models_x <- models[[outcome_x]]
-
         lapply(models_x, function(model_variant) {
             sapply(names(model_variant), simplify = FALSE, function(clustering_x) {
                 single_model <- model_variant[[clustering_x]]
+                clustering_df <- result_grouping[["clustering"]][[counts_proportions]][["metaCluster"]]
+
+                # Join phenotype cluster proportions with input data
+                df_in_group_pheno_values <- dplyr::left_join(df_in_group, clustering_df, by = "File")
 
                 # Apply the model to the input data
                 preds <- single_model$predict_newdata(df_in_group_pheno_values)
 
                 # Keep only prediction columns (drop metadata)
-                browser()
-                # Todo: Do this by name, this feels not explicit enough
-                tmp <- data.table::as.data.table(preds)[, -c(1:3)]
+                preds_dt <- data.table::as.data.table(preds)
+                tmp <- preds_dt[, -which(colnames(preds_dt) %in% c("row_ids", "truth", "response")), with = FALSE]
 
                 # Merge predictions with input
                 df_preds <- cbind(df_in_group_pheno_values, tmp)

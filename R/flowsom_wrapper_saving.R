@@ -9,7 +9,6 @@
 #'    - `"cells_clusters_from_train"`: List of predicted clusters per cell.
 #'    - `"ncells_per_x"`: Named list of data.tables with cluster cell counts per sample.
 #'    - `"proportions_per_x"`: Named list of data.tables with normalized cluster proportions.
-#'    - `"pheno"`: A data.table with sample-level metadata.
 #' @param dir_out
 #' A character string specifying the directory to which files should be saved.
 #' Will be created if it doesn't exist.
@@ -46,9 +45,4 @@ flowsom_wrapper_saving <- function(fs_applied, dir_out, modelname = "cells_asinh
         )
     }
 
-    # Save phenotype metadata
-    data.table::fwrite(
-        fs_applied[["pheno"]],
-        file.path(dir_out, "pheno.csv")
-    )
 }
