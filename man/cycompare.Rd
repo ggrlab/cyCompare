@@ -64,7 +64,8 @@ Default: \code{asinh(x / 1e3)}.}
 
 \item{marker_to_gate}{Named vector mapping markers to their respective gate names.}
 
-\item{prepared_saveload}{Optional character path. If the file exists, will load preprocessed data with \code{qs::qread()}; if not, will save it after processing using \code{qs::qsave()}.}
+\item{prepared_saveload}{Optional character path. If the file exists, will load preprocessed data with \code{qs::qread()};
+if not, will save it after processing using \code{qs::qsave()}.}
 
 \item{device_colors}{Either a named vector or a function returning colors for each device.}
 

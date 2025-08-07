@@ -45,9 +45,9 @@ This is useful to avoid returning large objects that are not needed for further 
 pipeline with additional parameters.}
 }
 \value{
-A nested list containing FlowSOM prediction results for each subsample, with cluster proportions normalized per sample.
-Large intermediate objects can be removed based on \code{remove_results_keywords}. Each list entry
-contains subsampling-specific results.
+A nested list containing FlowSOM prediction results for each subsample, with cluster proportions
+normalized per sample. Large intermediate objects can be removed based on \code{remove_results_keywords}.
+Each list entry contains subsampling-specific results.
 }
 \description{
 Performs repeated subsampling of  a list of flowFrames and applies a trained FlowSOM model

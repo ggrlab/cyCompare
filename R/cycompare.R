@@ -6,7 +6,9 @@
 #'
 #' @inheritParams cycompare_outcomes_analyse
 #' @param postgate_sample_seed Integer seed used for reproducible post-gating subsampling (default: 42).
-#' @param prepared_saveload Optional character path. If the file exists, will load preprocessed data with `qs::qread()`; if not, will save it after processing using `qs::qsave()`.
+#' @param prepared_saveload
+#' Optional character path. If the file exists, will load preprocessed data with `qs::qread()`;
+#' if not, will save it after processing using `qs::qsave()`.
 #' @param nClus Number of clusters for FlowSOM (default: 5).
 #' @param scale Logical, whether to scale markers for FlowSOM (default: `FALSE`).
 #' @param xdim An integer specifying the x-dimension of the FlowSOM grid (default: 3).

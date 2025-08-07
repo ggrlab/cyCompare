@@ -27,9 +27,10 @@
 #' Not used here, but potentially relevant if the calling function is used in a
 #' pipeline with additional parameters.
 #'
-#' @return A nested list containing FlowSOM prediction results for each subsample, with cluster proportions normalized per sample.
-#' Large intermediate objects can be removed based on `remove_results_keywords`. Each list entry
-#'   contains subsampling-specific results.
+#' @return
+#' A nested list containing FlowSOM prediction results for each subsample, with cluster proportions
+#' normalized per sample. Large intermediate objects can be removed based on `remove_results_keywords`.
+#' Each list entry contains subsampling-specific results.
 #'
 #' @export
 flowsom_repeatsubsampling_apply <- function(

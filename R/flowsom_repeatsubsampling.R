@@ -12,7 +12,8 @@
 #' @param subsampling_seed_first Integer; base seed used to ensure reproducibility of each subsampling.
 #' @param ... Additional arguments passed to `cytobench::flowSOM_optimal()`.
 #'
-#' @return The output of `cytobench::flowSOM_optimal()`, typically a list containing the FlowSOM model and cluster assignments.
+#' @return
+#' The output of `cytobench::flowSOM_optimal()`, typically a list containing the FlowSOM model and cluster assignments.
 #'
 #' @export
 #'
