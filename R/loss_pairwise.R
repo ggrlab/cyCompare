@@ -66,6 +66,7 @@ loss_pairwise <- function(datalist_A,
                           loss = lossfun_hist,
                           verbose = FALSE,
                           write_intermediate = FALSE,
+                          intermediate_file = "distances_intermediate.csv",
                           should_skip = function(i, j) i >= j,
                           take_time = FALSE,
                           return_as_matrix = TRUE,
@@ -106,7 +107,6 @@ loss_pairwise <- function(datalist_A,
 
 
     ### 3. Compute the distances
-    intermediate_file <- "distances_intermediate.csv"
     dt_res <- data.table::data.table(
         "sample_A_i" = NA_integer_,
         "sample_B_j" = NA_integer_,
