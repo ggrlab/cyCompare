@@ -7,17 +7,48 @@
 plot_counts(dt_counts, populations = NULL, device_colors = NULL)
 }
 \arguments{
-\item{dt_counts}{A \code{data.table} containing population counts with columns: \code{File}, \code{pop}, \code{count}, \code{Time}, and \code{Device}.}
+\item{dt_counts}{A \code{data.table} with population counts. Must contain columns:
+\code{File}, \code{pop}, \code{count}, \code{Time}, and \code{Device}.}
 
-\item{populations}{A character vector specifying which populations to plot. If \code{NULL}, all populations are used.}
+\item{populations}{Optional character vector specifying which populations to plot.
+If \code{NULL}, all populations present in \code{dt_counts$pop} will be used.}
 
-\item{device_colors}{A named vector specifying custom colors for devices (e.g., \code{c("Device1" = "red", "Device2" = "blue")}).}
+\item{device_colors}{Optional named vector defining plot colors per device
+(e.g., \code{c("DeviceA" = "steelblue", "DeviceB" = "firebrick")}).}
 }
 \value{
-A list of two \code{ggplot2} objects: one for raw counts and another for percentage relative to the root population.
+A named list of two \code{ggplot2} plot objects:
+\describe{
+\item{\code{count}}{Plot of raw event counts over time.}
+\item{\code{percentage}}{Plot of population proportion relative to root population.}
+}
 }
 \description{
 This function plots the count and percentage of each population relative to the root population
 over time, grouped by device. It supports optional filtering of specific populations and
 custom device colors.
+Data is grouped by device and faceted by population.
+}
+\examples{
+# Simulate example data
+set.seed(123)
+dt_counts <- data.table::data.table(
+    File = rep(paste0("Sample", 1:6), each = 3),
+    pop = rep(c("root", "CD4+", "CD8+"), times = 6),
+    count = rpois(18, lambda = 1000),
+    Time = rep(rep(1:3, each = 3), 2),
+    Device = rep(c("A", "B"), each = 9)
+)
+
+# Optional: specify populations and custom device colors
+selected_pops <- c("CD4+", "CD8+")
+device_cols <- c("A" = "blue", "B" = "green")
+
+# Generate plots
+plots <- plot_counts(dt_counts, populations = selected_pops, device_colors = device_cols)
+
+# Display the plots
+plots$count # Raw count over time
+plots$percentage # Percentage of root over time
+
 }

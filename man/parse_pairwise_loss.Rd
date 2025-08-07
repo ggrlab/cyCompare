@@ -2,7 +2,7 @@
 % Please edit documentation in R/parse_pairwise_loss.r
 \name{parse_pairwise_loss}
 \alias{parse_pairwise_loss}
-\title{Parse, (read) and Format Pairwise Loss Data}
+\title{Parse and Format Pairwise Loss Data from File or Data Frame}
 \usage{
 parse_pairwise_loss(
   bound_or_file = "distances_intermediate.csv",
@@ -12,31 +12,34 @@ parse_pairwise_loss(
 )
 }
 \arguments{
-\item{bound_or_file}{A character string giving the path to a CSV file, or a data.frame-like
-object with columns \code{sample_A_i}, \code{sample_B_j}, \code{dist}, and optionally \code{time}. The indices
-\code{sample_A_i} and \code{sample_B_j} are interpreted as explicit matrix positions.
-Usually a result of \code{loss_pairwise}.}
+\item{bound_or_file}{Either a path to a CSV file (as character) or a \code{data.frame}-like object.
+Must contain columns \code{sample_A_i}, \code{sample_B_j}, and \code{dist}. The \code{time} column is optional.
+Index columns \code{sample_A_i} and \code{sample_B_j} define matrix positions.
+If \code{sample_A} and \code{sample_B} columns (e.g. names) are present, they are used as row and column names.
 
-\item{return_as_matrix}{Logical. If \code{TRUE} (default), the function returns a list containing
-numeric matrices of distances and times. If \code{FALSE}, the original data is returned as-is.}
+Usually a result of \code{loss_pairwise()}.}
 
-\item{length_a}{Integer. Required if \code{bound_or_file} is a data.frame. Otherwise, inferred
-from the maximum \code{sample_A_i} value if not provided.}
+\item{return_as_matrix}{Logical. If \code{TRUE} (default), returns a list of matrices (\code{dist}, \code{time}).
+If \code{FALSE}, returns the input as-is in long format.}
 
-\item{length_b}{Integer. Required if \code{bound_or_file} is a data.frame. Otherwise, inferred
-from the maximum \code{sample_B_j} value if not provided.}
+\item{length_a}{Integer. Required when \code{bound_or_file} is a \code{data.frame} and \code{return_as_matrix = TRUE}.
+Defines number of rows in resulting matrix. Inferred from \code{sample_A_i} if \code{bound_or_file} is a file.}
+
+\item{length_b}{Integer. Required when \code{bound_or_file} is a \code{data.frame} and \code{return_as_matrix = TRUE}.
+Defines number of columns in resulting matrix. Inferred from \code{sample_B_j} if \code{bound_or_file} is a file.}
 }
 \value{
-If \code{return_as_matrix = TRUE}, returns a list with two components:
+If \code{return_as_matrix = TRUE}, returns a named list:
 \describe{
-\item{\code{dist}}{A numeric matrix of pairwise distances, indexed by \code{sample_A_i} and \code{sample_B_j}.}
-\item{\code{time}}{A numeric matrix of associated times, if available.}
+\item{\code{dist}}{Numeric matrix of pairwise distances.}
+\item{\code{time}}{Numeric matrix of corresponding computation times (if available).}
 }
-If \code{return_as_matrix = FALSE}, returns a data.frame in long format.
+If \code{return_as_matrix = FALSE}, returns the original \code{data.frame} in long format.
 }
 \description{
-Reads or processes a data frame or CSV file containing pairwise distance (loss) values
-between indexed samples and optionally reshapes the data into matrix form.
+This function reads pairwise loss or distance data—typically computed via \code{loss_pairwise()}-
+and optionally reshapes it into numeric matrix form. It supports both file-based input (CSV)
+and in-memory \code{data.frame}/\code{data.table} input.
 }
 \details{
 If the input data contains \code{sample_A} and \code{sample_B} columns (e.g., character sample labels),
@@ -45,16 +48,14 @@ these are used to assign row and column names to the resulting distance matrix.
 Matrix entries that are not represented in the input data are set to \code{NA}.
 }
 \examples{
-\dontrun{
-# From file
-parse_pairwise_loss("distances_intermediate.csv")
-
-# From in-memory data.frame
 df <- data.frame(
     sample_A_i = c(1, 1, 2), sample_B_j = c(2, 3, 3),
     dist = c(0.4, 0.3, 0.5), time = c(0.1, 0.2, 0.15)
 )
 parse_pairwise_loss(df, return_as_matrix = TRUE, length_a = 2, length_b = 3)
+\dontrun{
+# Example 1: Read and convert from CSV file
+parse_pairwise_loss("distances.csv")
 }
 
 }

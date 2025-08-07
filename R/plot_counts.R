@@ -19,7 +19,6 @@
 #' }
 #'
 #' @examples
-#' @examples
 #' # Simulate example data
 #' set.seed(123)
 #' dt_counts <- data.table::data.table(

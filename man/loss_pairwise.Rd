@@ -10,6 +10,7 @@ loss_pairwise(
   loss = lossfun_hist,
   verbose = FALSE,
   write_intermediate = FALSE,
+  intermediate_file = "distances_intermediate.csv",
   should_skip = function(i, j) i >= j,
   take_time = FALSE,
   return_as_matrix = TRUE,
