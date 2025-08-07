@@ -10,6 +10,7 @@
 #' @return A `ggplot2` object.
 #' @export
 plot_otd <- function(df, otd_df, device_colors = NULL) {
+    Time <- Device <- OTD_to_referencesample <- NULL # For R CMD check
     # Merge distance values with metadata
     df_with_dists <- dplyr::left_join(df, otd_df, by = "File")
 

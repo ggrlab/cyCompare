@@ -25,6 +25,7 @@ otd_to_reference <- function(ff_gated,
                                  return_as_matrix = TRUE
                              ),
                              relevant_columns = NULL) {
+    File <- NULL # For R CMD check
     # Default: use all marker columns
     if (is.null(relevant_columns)) {
         relevant_columns <- flowCore::colnames(ff_gated[[1]])
