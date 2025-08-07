@@ -27,23 +27,38 @@ subsample_multiple <- function(
     n_subsampled_cells = 10000,
     subsampling_seed_first = 427764) {
     # Perform subsampling independently per iteration
+    if ("flowSet" %in% class(ff_list)) {
+        listapply <- flowCore::fsApply
+    } else {
+        listapply <- function(...) {
+            sapply(..., simplify = FALSE)
+        }
+    }
     unlist(
         lapply(seq_len(n_subsampling), function(i) {
-            fs_subsampled <- flowCore::fsApply(ff_list, function(x) {
+            fs_subsampled <- listapply(ff_list, function(x) {
                 cytobench::subsample_ff(
                     x,
                     n_cells = n_subsampled_cells,
                     seed = subsampling_seed_first + i - 1
                 )
             })
-
-            # Label each sample with subsampling round
-            flowCore::sampleNames(fs_subsampled) <- paste0(
-                flowCore::sampleNames(fs_subsampled),
-                "_subsampled", i
-            )
-
-            flowCore::flowSet_to_list(fs_subsampled)
+            ff_list_subsampled <- flowCore::flowSet_to_list(fs_subsampled)
+            ffnames <- names(fs_subsampled)
+            if (all(is.null(ffnames))) {
+                ffnames <- flowCore::sampleNames(fs_subsampled)
+            }
+            if (n_subsampling > 1) {
+                # Label each sample with subsampling round
+                names(ff_list_subsampled) <- paste0(
+                    ffnames,
+                    "_subsampled", i
+                )
+            } else {
+                # If only one subsampling round, keep original names
+                names(ff_list_subsampled) <- ffnames
+            }
+            return(ff_list_subsampled)
         })
     )
 }

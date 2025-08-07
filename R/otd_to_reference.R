@@ -30,15 +30,16 @@ otd_to_reference <- function(ff_gated,
     if (is.null(relevant_columns)) {
         relevant_columns <- flowCore::colnames(ff_gated[[1]])
     }
+    # Build transformList
+    fc_transformlist <- transformlist_named(
+        transformlist,
+        relevant_columns = relevant_columns,
+        flowcore = TRUE
+    )
+    
 
     # Convert list to flowSet
     gated_fs <- flowCore::flowSet(ff_gated)
-
-    # Build transformList
-    fc_transformlist <- flowCore::transformList(
-        relevant_columns,
-        if (length(transformlist) == 1) rep(transformlist, length(relevant_columns)) else transformlist
-    )
 
     # Apply transformation
     gated_fs_transformed <- flowCore::transform(gated_fs, fc_transformlist)

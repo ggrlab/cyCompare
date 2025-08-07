@@ -63,19 +63,20 @@
 #'
 #' # Show first MA plot (first device combination, first clustering)
 #' print(result$p_MA)
-plot_flowsom <- function(ff_gated,
-                         df,
-                         device_colors = NULL,
-                         transformlist,
-                         nClus = 5,
-                         scale = FALSE,
-                         xdim = 3,
-                         ydim = 3,
-                         seed = 3711283,
-                         dfcol_grouping_samples = "Device",
-                         dfcol_train_validation_other = NULL,
-                         MA_horizontal_lines_FC = c(2, 10, 25),
-                         MA_bins = 100) {
+deprecated_plot_flowsom <- function(ff_gated,
+                                    df,
+                                    device_colors = NULL,
+                                    transformlist,
+                                    nClus = 5,
+                                    scale = FALSE,
+                                    xdim = 3,
+                                    ydim = 3,
+                                    seed = 3711283,
+                                    dfcol_grouping_samples = "Device",
+                                    dfcol_train_validation_other = NULL,
+                                    MA_horizontal_lines_FC = c(2, 10, 25),
+                                    MA_bins = 100,
+                                    relevant_columns = NULL) {
     File <- SuperSample <- Sample <- cluster_id <- proportion <- count <- NULL # R CMD check compatibility
     # Convert list of flowFrames into a flowSet for transformation
     if ("flowSet" %in% class(ff_gated)) {
@@ -84,10 +85,14 @@ plot_flowsom <- function(ff_gated,
         gated_fs <- flowCore::flowSet(ff_gated)
     }
 
-    # Apply the transformation: use same function for all markers if a single function is provided
-    fc_transformlist <- flowCore::transformList(
-        flowCore::colnames(gated_fs[[1]]),
-        transformlist_named(transformlist, flowCore::colnames(gated_fs[[1]]))
+    if (is.null(relevant_columns)) {
+        relevant_columns <- flowCore::colnames(gated_fs[[1]])
+    }
+    # Build transformList
+    fc_transformlist <- transformlist_named(
+        transformlist,
+        relevant_columns = relevant_columns,
+        flowcore = TRUE
     )
 
     # Transform the flowSet using the provided transformlist

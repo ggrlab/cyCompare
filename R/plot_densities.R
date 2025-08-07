@@ -62,7 +62,7 @@ plot_densities <- function(
     dfcol_grouping_samples = "Device",
     relevant_columns = NULL,
     limit_density_quantile = NA) {
-    . <- variable <- value <- File <- y <- V1 <- NULL # R CMD check compatibility
+    . <- variable <- value <- File <- y <- x <- V1 <- NULL # R CMD check compatibility
     if ("flowSet" %in% class(ff_gated)) {
         ff_gated <- flowCore::flowSet_to_list(ff_gated)
     }

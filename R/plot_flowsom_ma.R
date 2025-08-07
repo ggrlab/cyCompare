@@ -1,3 +1,17 @@
+#' Plot MA Plots Comparing Cluster Proportions Between Devices
+#'
+#' @param fs_pred
+#' Output from `run_flowsom_clustering()` which comes from `cytobench::flowSOM_predict()` and
+#' must contain the `ncells_per_x` list with the number of cells per cluster and sample.
+#' @param df Metadata table.
+#' @param device_colors Named color vector.
+#' @param dfcol_grouping_samples Device column.
+#' @param dfcol_train_validation_other Optional column for faceting.
+#' @param MA_horizontal_lines_FC Fold-change reference lines.
+#' @param MA_bins Number of bins for 2D histogram.
+#'
+#' @return A list of lists of MA plots.
+#' @export
 plot_flowsom_ma <- function(fs_pred,
                             df,
                             device_colors,
@@ -49,57 +63,53 @@ plot_flowsom_ma <- function(fs_pred,
             d2 <- device_combination[2]
 
             # Generate MA plot (log2 fold-change vs average)
-            p0 <- ggplot2::ggplot(
+            p <- ggplot2::ggplot(
                 x_data_df_persample,
                 ggplot2::aes(
                     y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)),
                     x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2)
                 )
             ) +
-                ggplot2::ggtitle(paste0(d1, " vs ", d2), subtitle = x) +
                 ggplot2::geom_abline(intercept = 0, slope = 0) +
-                ggplot2::theme_bw() +
+                ggplot2::ggtitle(paste(d1, "vs", d2), subtitle = x) +
                 ggplot2::scale_x_log10() +
+                ggplot2::theme_bw() +
                 ggplot2::theme(
                     axis.text.x = ggplot2::element_text(size = 6),
                     legend.position = "right",
                     legend.key.size = ggplot2::unit(.5, "cm"),
                     legend.title = ggplot2::element_text(angle = -90)
                 )
-            minimum_x_value <- min(
+
+            min_x <- min(
                 x_data_df_persample[[d1]],
                 x_data_df_persample[[d2]],
                 na.rm = TRUE
             )
-            # Facet by train/test if applicable
             if (!all(is.null(dfcol_train_validation_other))) {
-                p0 <- p0 + ggplot2::facet_wrap(dfcol_train_validation_other)
+                p <- p + ggplot2::facet_wrap(dfcol_train_validation_other)
             }
 
-            # Add horizontal reference lines for fold-changes (e.g., x2, x10, x25)
             for (specific_lines in MA_horizontal_lines_FC) {
-                p0 <- p0 +
-                    ggplot2::geom_hline(
-                        yintercept = c(-log2(specific_lines), log2(specific_lines)),
-                        linetype = "dashed"
-                    ) +
+                p <- p +
+                    ggplot2::geom_hline(yintercept = c(-log2(specific_lines), log2(specific_lines)), linetype = "dashed") +
                     ggplot2::annotate(
                         "text",
-                        x = minimum_x_value, y = log2(specific_lines),
-                        label = paste0("x", specific_lines),
-                        hjust = 0, vjust = 0, size = 5 # 2.5
+                        x = min_x, y = log2(specific_lines),
+                        label = paste0("x", specific_lines), hjust = 0, vjust = 0, size = 2.5
                     )
             }
 
+
             # Add density information via 2D binning
-            plotlist[[combination_i]] <- p0 +
+            plotlist[[combination_i]] <- p +
                 ggplot2::stat_bin_2d(
                     ggplot2::aes(fill = log10(ggplot2::after_stat(count) + 1)),
                     bins = MA_bins,
                     geom = "tile"
                 ) +
-                ggplot2::labs(fill = "Log10(n cells +1)") +
-                ggplot2::scale_fill_viridis_c(na.value = NA)
+                ggplot2::scale_fill_viridis_c(na.value = NA) +
+                ggplot2::labs(fill = "Log10(n cells +1)")
         }
 
         return(plotlist)

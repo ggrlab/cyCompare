@@ -143,13 +143,17 @@ cycompare <- function(
 
     # --- 3. Optimal Transport Distance (OTD) ---
     if (do_otd) {
-        p3.1 <- plot_otd(
+        calculated_otd <- otd_to_reference(
             ff_gated = gated_ff,
-            df = df,
-            device_colors = device_colors,
             transformlist = transformlist,
-            n_mastersample = n_events_postgate,
-            kwargs_loss = OTD_kwargs_loss
+            n_referencesample = n_events_postgate,
+            kwargs_loss = OTD_kwargs_loss,
+            relevant_columns = ff_columns_relevant
+        )
+        p3.1 <- plot_otd(
+            df = df,
+            otd_df = calculated_otd,
+            device_colors = device_colors
         )
     } else {
         p3.1 <- NULL
@@ -157,10 +161,9 @@ cycompare <- function(
 
     # --- 4. FlowSOM clustering and plots ---
     if (do_flowsom) {
-        p_flowsom <- plot_flowsom(
+        res_fs <- flowsom_run_train(
             ff_gated = gated_ff,
-            df = df,
-            device_colors = device_colors,
+            relevant_columns = ff_columns_relevant,
             transformlist = transformlist,
             nClus = nClus,
             scale = scale,
@@ -168,8 +171,25 @@ cycompare <- function(
             ydim = ydim,
             seed = flowsom_seed
         )
+        p4.1 <- plot_flowsom_pca(
+            fs_pred = res_fs,
+            df = df,
+            device_colors = device_colors,
+            dfcol_grouping_samples = dfcol_grouping_samples,
+            dfcol_train_validation_other = dfcol_train_validation_other
+        )
+        p4.2 <- plot_flowsom_ma(
+            fs_pred = res_fs,
+            df = df,
+            device_colors = device_colors,
+            dfcol_grouping_samples = dfcol_grouping_samples,
+            dfcol_train_validation_other = dfcol_train_validation_other,
+            MA_horizontal_lines_FC = c(2, 10, 25),
+            MA_bins = 100
+        )
     } else {
-        p_flowsom <- NULL
+        p4.1 <- NULL
+        p4.2 <- NULL
     }
 
     # --- Return all collected plots ---
@@ -181,8 +201,8 @@ cycompare <- function(
             "Positive population MFI ratio" = p2.1_ratio,
             "Density plots" = p2.2,
             "OTD to mastersample" = p3.1,
-            "Flowsom_PCA" = if (!is.null(p_flowsom)) p_flowsom[["plots_pca"]] else NULL,
-            "Flowsom_MA" = if (!is.null(p_flowsom)) p_flowsom[["p_MA"]] else NULL
+            "Flowsom_PCA" = p4.1,
+            "Flowsom_MA" = p4.2
         )
     )
 }

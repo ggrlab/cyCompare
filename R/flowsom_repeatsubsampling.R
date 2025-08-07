@@ -62,6 +62,7 @@ flowsom_repeatsubsampling <- function(
         fs_train = fs_train_multiple,
         outdir = outdir,
         colsToUse = columns_clustering,
+        seed = subsampling_seed_first,
         ...
     )
 

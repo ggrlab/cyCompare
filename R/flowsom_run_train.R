@@ -1,18 +1,24 @@
-#' Run FlowSOM Clustering and Predict Cluster Assignments
+#' Train and Predict FlowSOM Clustering Based on Training Samples
 #'
-#' Transforms the data, selects training samples, performs FlowSOM clustering,
-#' and predicts cluster assignments for all samples.
+#' This function applies marker transformation, runs FlowSOM clustering on a subset of training samples,
+#' and predicts cluster assignments for all samples. Clustering is performed using `flowsom_repeatsubsampling()`.
 #'
-#' @param ff_gated A list of flowFrame objects.
-#' @param df Metadata table with a `File` column.
-#' @param transformlist Transformation function(s).
-#' @param nClus Number of clusters.
-#' @param scale Logical; if TRUE, scale data.
-#' @param xdim, ydim Dimensions for FlowSOM grid.
-#' @param seed Random seed.
-#' @param dfcol_train_validation_other Optional column name for filtering training data (e.g., "TrainTest").
+#' @param ff_gated A list of `flowFrame` objects or a `flowSet`, representing gated cytometry data.
+#' @param df
+#' A `data.table` containing metadata with at least a `File` column. Only used
+#' if `dfcol_train_validation_other` is specified, then `dfcol_train_validation_other` column
+#' is used to select training samples for training the clustering.
+#' @param transformlist
+#' Either a single transformation function or a named list of functions per marker.
+#' @param seed Integer seed for reproducibility of subsampling.
+#' @param dfcol_train_validation_other
+#' Optional column in `df` used to select training samples (e.g., `"TrainTest"`).
+#' @param relevant_columns
+#' Character vector specifying markers to use for clustering. Defaults to all columns.
+#' @param ... Additional arguments passed to `flowsom_repeatsubsampling()`.
 #'
-#' @return Output of `cytobench::flowSOM_predict()`.
+#' @return A list containing cluster prediction results, as returned by `cytobench::flowSOM_predict()`.
+#'
 #' @export
 flowsom_run_train <- function(ff_gated,
                               df,

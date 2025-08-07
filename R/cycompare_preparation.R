@@ -162,21 +162,18 @@ cycompare_preparation <- function(
     gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
 
     # --- 9. process transformlist if given ---
-
-    if (length(transformlist) == 1 && !is.null(transformlist)) {
-        if (is.function(transformlist)) {
-            transformlist <- list(transformlist)
-        }
-        transformlist <- setNames(
-            rep(transformlist, length(ff_columns_relevant)),
-            ff_columns_relevant
-        )
-    }
+    # transformlist_named() is going to be called where needed again!
+    # This here is just for testing if the transformlist is valid
+    transformlist_list <- transformlist_named(
+        transformlist,
+        relevant_columns = ff_columns_relevant,
+        flowcore = FALSE
+    )
     # Ensure every marker has a transform
-    if (!all(ff_columns_relevant %in% names(transformlist))) {
+    if (!all(ff_columns_relevant %in% names(transformlist_list))) {
         stop(
             "All `ff_columns_relevant` must be covered by `transformlist`. Missing: ",
-            paste(setdiff(ff_columns_relevant, names(transformlist)), collapse = ", ")
+            paste(setdiff(ff_columns_relevant, names(transformlist_list)), collapse = ", ")
         )
     }
 
