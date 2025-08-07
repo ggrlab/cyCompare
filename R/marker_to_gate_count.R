@@ -24,7 +24,6 @@
 #'
 #' @export
 marker_to_gate_count <- function(marker_to_gate, dt_count_mfi) {
-    browser()
     # Extract unique gating populations from marker_to_gate
     relevant_gates <- unique(unlist(marker_to_gate))
 

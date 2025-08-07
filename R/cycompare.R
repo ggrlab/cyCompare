@@ -68,7 +68,6 @@ cycompare <- function(
     xdim = 3,
     ydim = 3,
     flowsom_seed = 3711283) {
-    browser()
     # --- Load or prepare data ---
     if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
         message("Loading prepared data from ", prepared_saveload)
@@ -156,6 +155,7 @@ cycompare <- function(
             device_colors = device_colors
         )
     } else {
+        calculated_otd <- NULL
         p3.1 <- NULL
     }
 
@@ -188,6 +188,7 @@ cycompare <- function(
             MA_bins = 100
         )
     } else {
+        res_fs <- NULL
         p4.1 <- NULL
         p4.2 <- NULL
     }
@@ -202,7 +203,9 @@ cycompare <- function(
             "Density plots" = p2.2,
             "OTD to mastersample" = p3.1,
             "Flowsom_PCA" = p4.1,
-            "Flowsom_MA" = p4.2
+            "Flowsom_MA" = p4.2,
+            "results_flowsom" = res_fs,
+            "calculated_otd" = calculated_otd
         )
     )
 }
