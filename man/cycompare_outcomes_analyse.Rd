@@ -58,7 +58,7 @@ cytometer, or lab but SHOULD have the same values.}
 
 \item{outdir_base}{Base directory for saving intermediate results (default: \code{tempdir()}).}
 
-\item{transformlist}{Either a function (applied as \code{flowCore::transformlist}) or a \code{transformlist} object.
+\item{transformlist}{Either a function (applied as \code{flowCore::transformList}) or a \code{transformlist} object.
 Default: \code{asinh(x / 1e3)}.}
 
 \item{gatingsets}{Named list of gating sets used to extract primary populations. One gating set per sample.}

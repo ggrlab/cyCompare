@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_flowsom.R
 \name{plot_flowsom}
 \alias{plot_flowsom}
-\title{Generate FlowSOM Clustering and Visualization for Flow Cytometry Data}
+\title{Perform FlowSOM Clustering and Generate Device-Comparative Plots}
 \usage{
 plot_flowsom(
   ff_gated,
@@ -15,54 +15,80 @@ plot_flowsom(
   ydim = 3,
   seed = 3711283,
   dfcol_grouping_samples = "Device",
-  dfcol_train_validation_other = NULL
+  dfcol_train_validation_other = NULL,
+  MA_horizontal_lines_FC = c(2, 10, 25),
+  MA_bins = 100
 )
 }
 \arguments{
 \item{ff_gated}{A list of \code{flowFrame} objects containing gated flow cytometry data.}
 
-\item{df}{A \code{data.table} containing metadata with at least the columns \code{"File"}, \code{"Device"}, and \code{"Sample"}.}
+\item{df}{A \code{data.table} with metadata, containing at least the columns \code{"File"},
+\code{dfcol_grouping_samples}, and \code{"Sample"}.}
 
-\item{device_colors}{A named vector of colors for each device to use in the plots.}
+\item{device_colors}{A named vector assigning a color to each device. Used in plots.}
 
-\item{transformlist}{A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.}
+\item{transformlist}{A list of transformation functions per marker. If a single function is given, it is applied to all markers.}
 
-\item{nClus}{An integer specifying the number of clusters for FlowSOM.}
+\item{nClus}{Integer specifying the number of clusters for FlowSOM.}
 
-\item{scale}{A logical indicating whether to scale the data in FlowSOM clustering .}
+\item{scale}{Logical. If \code{TRUE}, scales the data before clustering.}
 
-\item{xdim}{An integer specifying the x-dimension of the FlowSOM grid.}
+\item{xdim}{Integer. X-dimension of the FlowSOM grid.}
 
-\item{ydim}{An integer specifying the y-dimension of the FlowSOM grid.}
+\item{ydim}{Integer. Y-dimension of the FlowSOM grid.}
 
-\item{seed}{An integer specifying the random seed for FlowSOM clustering .}
+\item{seed}{Integer. Random seed for reproducibility.}
 
-\item{...}{Additional parameters passed to \code{FlowSOM::FlowSOM()}. Todo: THIS failed and is not used right now}
+\item{dfcol_grouping_samples}{Character scalar specifying the column in \code{df} used to group samples in PCA plots (default: \code{"Device"}).}
+
+\item{dfcol_train_validation_other}{Optional character scalar. If set, this column is used to select the training subset
+(\code{"train"}) for clustering and to shape/facet the plots.}
 }
 \value{
-A list containing:
-\item{plots_pca}{A list of PCA plots for each clustering result, colored by device.}
-\item{p_MA}{A list of MA plots comparing cluster proportions between devices.}
+A named list with two elements:
+\item{plots_pca}{A list of PCA plots showing clustering results colored by device.}
+\item{p_MA}{A list of MA plots comparing cluster proportions across devices.}
 }
 \description{
-This function performs FlowSOM clustering on gated flow cytometry data and
-generates PCA and MA plots for visualization.
+This function clusters gated flow cytometry data using FlowSOM and generates PCA and MA plots
+to compare cluster distributions across devices. Optionally, only a training subset of the data
+can be used for clustering.
 }
 \examples{
-\dontrun{
-# Example usage:
-plot_results <- plot_flowsom(
-    ff_gated = my_ff_list,
-    df = metadata_dt,
-    device_colors = my_colors,
-    transformlist = my_transform_functions
+# Simulate flow cytometry data
+fs <- cytobench::simulate_fs(
+    n_samples = 4,
+    ncells = 250,
+    columns = c("CD4", "CD8", "CD3")
 )
 
-# Access PCA plots
-plot_results$plots_pca[[1]]
+# Create metadata for each sample
+df_meta <- data.table::data.table(
+    File = flowCore::sampleNames(fs),
+    Device = c("A", "A", "B", "B"),
+    Sample = c("S1", "S2", "S1", "S2"),
+    SuperSample = "Study_Z",
+    TrainTest = c("train", "test", "train", "test")
+)
 
-# Access MA plots
-plot_results$p_MA[[1]]
-}
+# Define color palette for devices
+device_cols <- c("A" = "steelblue", "B" = "firebrick")
 
+# Run FlowSOM clustering and generate plots
+result <- plot_flowsom(
+    ff_gated = fs,
+    df = df_meta,
+    device_colors = device_cols,
+    transformlist = function(x) asinh(x / 1000),
+    nClus = 4,
+    dfcol_grouping_samples = "Device",
+    dfcol_train_validation_other = "TrainTest"
+)
+
+# Show first PCA plot
+print(result$plots_pca)
+
+# Show first MA plot (first device combination, first clustering)
+print(result$p_MA)
 }

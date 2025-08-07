@@ -28,7 +28,7 @@
 #' @param outdir_base
 #' Base directory for saving intermediate results (default: `tempdir()`).
 #' @param transformlist
-#' Either a function (applied as `flowCore::transformlist`) or a `transformlist` object.
+#' Either a function (applied as `flowCore::transformList`) or a `transformlist` object.
 #' Default: `asinh(x / 1e3)`.
 #' @param gatingsets
 #' Named list of gating sets used to extract primary populations. One gating set per sample.
@@ -126,7 +126,7 @@ cycompare_outcomes_analyse <- function(
     if (all(is.null(transformlist))) {
         transformlist <- NULL
     } else if (is.function(transformlist)) {
-        transformlist <- flowCore::transformlist(
+        transformlist <- flowCore::transformList(
             from = ff_columns_relevant,
             tfun = transformlist
         )

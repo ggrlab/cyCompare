@@ -51,7 +51,7 @@ cytometer, or lab but SHOULD have the same values.}
 
 \item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{transformlist}{Either a function (applied as \code{flowCore::transformlist}) or a \code{transformlist} object.
+\item{transformlist}{Either a function (applied as \code{flowCore::transformList}) or a \code{transformlist} object.
 Default: \code{asinh(x / 1e3)}.}
 
 \item{gatingsets}{Named list of gating sets used to extract primary populations. One gating set per sample.}

@@ -5,16 +5,22 @@
 #' can be used for clustering.
 #'
 #' @param ff_gated A list of `flowFrame` objects containing gated flow cytometry data.
-#' @param df A `data.table` with metadata, containing at least the columns `"File"`, `dfcol_grouping_samples`, and `"Sample"`.
+#' @param df
+#' A `data.table` with metadata, containing at least the columns `"File"`,
+#' `dfcol_grouping_samples`, and `"Sample"`.
 #' @param device_colors A named vector assigning a color to each device. Used in plots.
-#' @param transformlist A list of transformation functions per marker. If a single function is given, it is applied to all markers.
+#' @param transformlist
+#' A list of transformation functions per marker. If a single function is given, it is applied to all markers.
 #' @param nClus Integer specifying the number of clusters for FlowSOM.
 #' @param scale Logical. If `TRUE`, scales the data before clustering.
 #' @param xdim Integer. X-dimension of the FlowSOM grid.
 #' @param ydim Integer. Y-dimension of the FlowSOM grid.
 #' @param seed Integer. Random seed for reproducibility.
-#' @param dfcol_grouping_samples Character scalar specifying the column in `df` used to group samples in PCA plots (default: `"Device"`).
-#' @param dfcol_train_validation_other Optional character scalar. If set, this column is used to select the training subset (`"train"`) for clustering and to shape/facet the plots.
+#' @param dfcol_grouping_samples
+#' Character scalar specifying the column in `df` used to group samples in PCA plots (default: `"Device"`).
+#' @param dfcol_train_validation_other
+#' Optional character scalar. If set, this column is used to select the training subset
+#' (`"train"`) for clustering and to shape/facet the plots.
 #' @return A named list with two elements:
 #'   \item{plots_pca}{A list of PCA plots showing clustering results colored by device.}
 #'   \item{p_MA}{A list of MA plots comparing cluster proportions across devices.}
@@ -34,7 +40,8 @@
 #'     File = flowCore::sampleNames(fs),
 #'     Device = c("A", "A", "B", "B"),
 #'     Sample = c("S1", "S2", "S1", "S2"),
-#'     TrainTest = c("train", "train", "test", "test")
+#'     SuperSample = "Study_Z",
+#'     TrainTest = c("train", "test", "train", "test")
 #' )
 #'
 #' # Define color palette for devices
@@ -52,10 +59,10 @@
 #' )
 #'
 #' # Show first PCA plot
-#' print(result$plots_pca[[1]])
+#' print(result$plots_pca)
 #'
 #' # Show first MA plot (first device combination, first clustering)
-#' print(result$p_MA[[1]][[1]])
+#' print(result$p_MA)
 plot_flowsom <- function(ff_gated,
                          df,
                          device_colors = NULL,

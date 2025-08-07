@@ -68,6 +68,7 @@ cycompare <- function(
     xdim = 3,
     ydim = 3,
     flowsom_seed = 3711283) {
+    browser()
     # --- Load or prepare data ---
     if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
         message("Loading prepared data from ", prepared_saveload)
@@ -110,7 +111,6 @@ cycompare <- function(
     ## 1.2 & 1.3: Gated cell counts and percentages
     p1.2_3 <- plot_counts(
         dt_count = counts_joint,
-        gatename = gatename_primary,
         device_colors = device_colors
     )
 
