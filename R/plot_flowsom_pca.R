@@ -17,10 +17,10 @@ plot_flowsom_pca <- function(fs_pred,
         x_data <- fs_pred[["ncells_per_x"]][[x]]
         x_scaled <- scale(dplyr::select(x_data, -sample), center = TRUE, scale = TRUE)
         # Remove columns with constant values (zero variance)
-        x_data_scaled_noconstant.cols <- x_data_scaled[, !is.na(apply(x_data_scaled, 2, var))]
+        x_scaled_noconstant.cols <- x_scaled[, !is.na(apply(x_scaled, 2, var))]
 
         # PCA on normalized cluster proportions
-        res_pca <- stats::prcomp(x_data_scaled_noconstant.cols, scale = FALSE)
+        res_pca <- stats::prcomp(x_scaled_noconstant.cols, scale = FALSE)
 
         # Generate PCA plot using ggfortify
         p <- ggfortify:::autoplot.prcomp(

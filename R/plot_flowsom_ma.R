@@ -18,7 +18,10 @@ plot_flowsom_ma <- function(fs_pred,
                             dfcol_grouping_samples = "Device",
                             dfcol_train_validation_other = NULL,
                             MA_horizontal_lines_FC = c(2, 10, 25),
-                            MA_bins = 100) {
+                            MA_bins = 100,
+                            zero_handling_log2_value = NULL) {
+    log2_prop_d1_dividedBY_d2 <- avg_prop_d1_d2 <- NULL # For R CMD check
+    Sample <- SuperSample <- cluster_id <- proportion <- count <- NULL # For R CMD check
     lapply(names(fs_pred[["ncells_per_x"]]), function(x) {
         x_data <- fs_pred[["ncells_per_x"]][[x]]
         x_data_numeric <- dplyr::select(x_data, -sample)
@@ -61,13 +64,53 @@ plot_flowsom_ma <- function(fs_pred,
             device_combination <- device_combinations[, combination_i]
             d1 <- device_combination[1]
             d2 <- device_combination[2]
-
+            current_df <- dplyr::mutate(
+                x_data_df_persample,
+                log2_prop_d1_dividedBY_d2 = log2(!!rlang::sym(d1) / !!rlang::sym(d2)),
+                avg_prop_d1_d2 = (!!rlang::sym(d1) + !!rlang::sym(d2)) / 2
+            )
+            actual_extremes <- current_df |>
+                dplyr::filter(
+                    !is.infinite(log2_prop_d1_dividedBY_d2)
+                ) |>
+                dplyr::pull(log2_prop_d1_dividedBY_d2) |>
+                abs() |>
+                max() * 1.1
+            if (is.infinite(actual_extremes)) {
+                # Then all values are infinite - no cluster had cells from both devices
+                actual_extremes <- 1
+                warning(paste0(
+                    "All log2 fold-changes are infinite, setting actual_extremes to 1.",
+                    "No cluster had cells from both groupings: ",
+                    d1, " and ", d2, "."
+                ))
+            }
+            if (is.null(zero_handling_log2_value)) {
+                zero_handling_log2_value <- actual_extremes
+            } else {
+                if (zero_handling_log2_value < actual_extremes) {
+                    zero_handling_log2_value <- actual_extremes
+                    warning(
+                        "zero_handling_log2_value was set to ",
+                        zero_handling_log2_value,
+                        " because it was smaller than the maximum absolute log2 fold-change."
+                    )
+                }
+            }
+            current_df <- dplyr::mutate(
+                current_df,
+                log2_prop_d1_dividedBY_d2 = ifelse(
+                    is.infinite(log2_prop_d1_dividedBY_d2),
+                    sign(log2_prop_d1_dividedBY_d2) * zero_handling_log2_value,
+                    log2_prop_d1_dividedBY_d2
+                )
+            )
             # Generate MA plot (log2 fold-change vs average)
             p <- ggplot2::ggplot(
-                x_data_df_persample,
+                current_df,
                 ggplot2::aes(
-                    y = log2(!!ggplot2::sym(d1) / !!ggplot2::sym(d2)),
-                    x = ((!!ggplot2::sym(d1) + !!ggplot2::sym(d2)) / 2)
+                    x = avg_prop_d1_d2,
+                    y = log2_prop_d1_dividedBY_d2
                 )
             ) +
                 ggplot2::geom_abline(intercept = 0, slope = 0) +
@@ -80,7 +123,6 @@ plot_flowsom_ma <- function(fs_pred,
                     legend.key.size = ggplot2::unit(.5, "cm"),
                     legend.title = ggplot2::element_text(angle = -90)
                 )
-
             min_x <- min(
                 x_data_df_persample[[d1]],
                 x_data_df_persample[[d2]],
@@ -99,7 +141,6 @@ plot_flowsom_ma <- function(fs_pred,
                         label = paste0("x", specific_lines), hjust = 0, vjust = 0, size = 2.5
                     )
             }
-
 
             # Add density information via 2D binning
             plotlist[[combination_i]] <- p +

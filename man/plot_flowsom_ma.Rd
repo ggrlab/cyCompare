@@ -11,7 +11,8 @@ plot_flowsom_ma(
   dfcol_grouping_samples = "Device",
   dfcol_train_validation_other = NULL,
   MA_horizontal_lines_FC = c(2, 10, 25),
-  MA_bins = 100
+  MA_bins = 100,
+  zero_handling_log2_value = NULL
 )
 }
 \arguments{
