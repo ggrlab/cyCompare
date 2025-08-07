@@ -2,7 +2,8 @@
 #'
 #' Applies a user-specified function to grouped subsets of flow cytometry data.
 #' Groupings are defined by combinations of metadata columns in `df`, such as study or device.
-#' Each group's subset is passed to `fun()` (e.g., FlowSOM training) independently, allowing per-device or per-supersample processing.
+#' Each group's subset is passed to `fun()` (e.g., FlowSOM training) independently,
+#' allowing per-device or per-supersample processing.
 #'
 #' @inheritParams cycompare_outcomes_analyse
 #' @param data
@@ -10,12 +11,19 @@
 #' A named list of flowFrames (or similar), with names matching entries in `df$File`.
 #'
 #' @param make_flowset Logical; if `TRUE`, convert the subset to a `flowSet` before calling `fun`.
-#' @param fun Function to apply to each group. It must accept a subset of the data and an `outdir` as its first two arguments.
-#' @param dfcol_othergroups Optional character vector of additional grouping columns.
-#' @param outdir_base Optional character path; used as the root directory for saving results. Each group will have a subdirectory named like `columnA.valueA___columnB.valueB/`.
+#' @param fun
+#' Function to apply to each group. It must accept a subset of the data and an `outdir` as its first two arguments.
+#' @param dfcol_othergroups
+#' Optional character vector of additional grouping columns.
+#' @param outdir_base
+#' Optional character path; used as the root directory for saving results.
+#' Each group will have a subdirectory named like `columnA.valueA___columnB.valueB/`.
 #' @param verbose Logical; print progress messages (default: `FALSE`).
-#' @param return_results Logical; whether to return the result of `fun()` for each group. If `FALSE`, assumes `fun()` is expected to save results to disk into `outdir_base`.
-#' @param subset_fun Function to extract a subset from `data` given a vector of `File` names. Defaults to indexing `data[files]`.
+#' @param return_results
+#' Logical; whether to return the result of `fun()` for each group. If `FALSE`,
+#' assumes `fun()` is expected to save results to disk into `outdir_base`.
+#' @param subset_fun
+#' Function to extract a subset from `data` given a vector of `File` names. Defaults to indexing `data[files]`.
 #' @param ... Additional arguments passed to `fun`.
 
 #'

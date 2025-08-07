@@ -14,7 +14,7 @@ cycompare_outcomes_analyse(
   dfcol_outcomes = c("outcome_1", "outcome_2"),
   outcome_models = list(glmnet = glmnet::cv.glmnet),
   outdir_base = tempdir(),
-  transformList = function(x) asinh(x/1000),
+  transformlist = function(x) asinh(x/1000),
   gatingsets,
   gatename_primary,
   n_events_postgate = 10000,
@@ -35,15 +35,20 @@ cycompare_outcomes_analyse(
 )
 }
 \arguments{
-\item{flowframes}{Named list of \code{flowFrame} objects with raw FCM data. Names must match entries in \code{df$File}.}
+\item{flowframes}{Named list of \code{flowFrame} objects with raw flow cytometry data. Names must match entries in \code{df$File}.}
 
-\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*} and a unique \code{File} column.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
 \item{ff_columns_relevant}{Character vector of marker/feature columns to use for clustering and modeling.}
 
-\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).}
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).
+A supersample collects samples of same origin: A study collects samples from
+multiple donors/patients, a patient might be in multiple times.}
 
-\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).}
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).
+Each final biologically different sample could be measured with a different technology,
+cytometer, or lab but SHOULD have the same values.}
 
 \item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
@@ -53,9 +58,10 @@ cycompare_outcomes_analyse(
 
 \item{outdir_base}{Base directory for saving intermediate results (default: \code{tempdir()}).}
 
-\item{transformList}{Either a function (applied as \code{flowCore::transformList}) or a \code{transformList} object. Default: \code{asinh(x / 1e3)}.}
+\item{transformlist}{Either a function (applied as \code{flowCore::transformlist}) or a \code{transformlist} object.
+Default: \code{asinh(x / 1e3)}.}
 
-\item{gatingsets}{Named list of gating sets used to extract primary populations.}
+\item{gatingsets}{Named list of gating sets used to extract primary populations. One gating set per sample.}
 
 \item{gatename_primary}{String specifying the gate used for downstream data (e.g., \code{"CD3+"}).}
 
@@ -63,7 +69,7 @@ cycompare_outcomes_analyse(
 
 \item{marker_to_gate}{Named vector mapping markers to their respective gate names.}
 
-\item{device_colors}{Either a named vector or function returning colors for each device.}
+\item{device_colors}{Either a named vector or a function returning colors for each device.}
 
 \item{clustering_n_subsampling}{Number of FlowSOM subsampling repeats (default: 1).}
 
@@ -82,7 +88,10 @@ A named list with the following structure:
 \describe{
 \item{prepared_data}{Transformed flowFrames, cell counts, and device colors.}
 \item{clustering}{FlowSOM models trained on training data and applied to all samples.}
-\item{models}{Trained models and their predictions across all samples.}
+\item{models}{
+Trained models according to \code{dfcol_train_validation_other} splits
+and their predictions across all samples.
+}
 }
 }
 \description{

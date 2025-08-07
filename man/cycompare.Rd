@@ -30,56 +30,77 @@ cycompare(
   scale = FALSE,
   xdim = 3,
   ydim = 3,
-  seed = 3711283
+  flowsom_seed = 3711283
 )
 }
 \arguments{
-\item{flowframes}{A named list of \code{flowFrame} objects containing flow cytometry data.}
+\item{flowframes}{Named list of \code{flowFrame} objects with raw flow cytometry data. Names must match entries in \code{df$File}.}
 
-\item{df}{A \code{data.table} containing metadata with at least the columns \code{"File"}, \code{"Device"}, and \code{"Sample"}.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
-\item{ff_columns_relevant}{A character vector specifying the relevant markers for analysis.}
+\item{ff_columns_relevant}{Character vector of marker/feature columns to use for clustering and modeling.}
 
-\item{transformlist}{A transformation function or a named list of functions for transforming marker intensities
-(default: \code{asinh(x / 1e3)}).}
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).
+A supersample collects samples of same origin: A study collects samples from
+multiple donors/patients, a patient might be in multiple times.}
 
-\item{gatingsets}{A named list of gating sets for each dataset.}
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).
+Each final biologically different sample could be measured with a different technology,
+cytometer, or lab but SHOULD have the same values.}
 
-\item{gatename_primary}{A character string specifying the primary gating population.}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{n_events_postgate}{An integer specifying the maximum number of events to keep post-gating.}
+\item{transformlist}{Either a function (applied as \code{flowCore::transformlist}) or a \code{transformlist} object.
+Default: \code{asinh(x / 1e3)}.}
 
-\item{postgate_sample_seed}{An integer seed for random sampling of events after gating (default: \code{42}).}
+\item{gatingsets}{Named list of gating sets used to extract primary populations. One gating set per sample.}
 
-\item{marker_to_gate}{A named vector mapping marker names to their corresponding gates.}
+\item{gatename_primary}{String specifying the gate used for downstream data (e.g., \code{"CD3+"}).}
 
-\item{prepared_saveload}{A character string specifying the file path to save or load (if exists) prepared data.}
+\item{n_events_postgate}{Maximum number of events to retain per sample after gating (default: 10,000).}
 
-\item{device_colors}{A named vector or function that provides colors for each device.
-If a function is provided, it should take the number of devices as input and return a vector of colors.}
+\item{postgate_sample_seed}{Integer seed used for reproducible post-gating subsampling (default: 42).}
 
-\item{nClus}{An integer specifying the number of clusters for FlowSOM clustering (default: 5).}
+\item{marker_to_gate}{Named vector mapping markers to their respective gate names.}
 
-\item{scale}{A logical indicating whether to scale the data in FlowSOM clustering (default: \code{FALSE}).}
+\item{prepared_saveload}{Optional character path. If the file exists, will load preprocessed data with \code{qs::qread()}; if not, will save it after processing using \code{qs::qsave()}.}
+
+\item{device_colors}{Either a named vector or a function returning colors for each device.}
+
+\item{do_otd}{Logical. Whether to perform optimal transport distance (OTD) comparison (default: \code{TRUE}).}
+
+\item{OTD_kwargs_loss}{Named list of arguments for the OTD loss function.}
+
+\item{do_flowsom}{Logical. Whether to perform FlowSOM clustering and plot comparisons (default: \code{TRUE}).}
+
+\item{nClus}{Number of clusters for FlowSOM (default: 5).}
+
+\item{scale}{Logical, whether to scale markers for FlowSOM (default: \code{FALSE}).}
 
 \item{xdim}{An integer specifying the x-dimension of the FlowSOM grid (default: 3).}
 
 \item{ydim}{An integer specifying the y-dimension of the FlowSOM grid (default: 3).}
 
-\item{seed}{An integer specifying the random seed for FlowSOM clustering (default: \code{3711283}).}
+\item{flowsom_seed}{An integer specifying the random seed for FlowSOM clustering (default: \code{3711283}).}
 
-\item{...}{Additional parameters passed to \code{plot_flowsom()}.}
+\item{...}{Passed to \code{plot_flowsom()} (e.g., plotting customization).}
 }
 \value{
-A named list of ggplot2 objects containing:
-\item{"Samples over time per device"}{A plot showing the number of samples collected over time per device.}
-\item{"Counts and percentages"}{Plots of gated cell counts and percentages per sample.}
-\item{"Positive population MFI"}{Plots showing the median fluorescence intensity (MFI) of positive gated populations.}
-\item{"Density plots"}{Density distributions of marker intensities across devices and samples.}
-\item{"Flowsom_PCA"}{Principal Component Analysis (PCA) plots of FlowSOM clustering results.}
-\item{"Flowsom_MA"}{MA plots comparing cluster proportions between devices.}
+A named list of \code{ggplot2} plots:
+\describe{
+\item{Samples over time per device}{Number of samples per device over time.}
+\item{Counts and percentages}{Per-sample cell counts and gated proportions.}
+\item{Positive population MFI}{MFI values of gated markers across devices.}
+\item{Positive population MFI ratio}{Ratio of MFI values across devices.}
+\item{Density plots}{Marker intensity distributions for each device.}
+\item{OTD to mastersample}{Pairwise distances between devices or conditions.}
+\item{Flowsom_PCA}{Cluster-level PCA across samples.}
+\item{Flowsom_MA}{Mean-vs-difference cluster abundance plots.}
+}
 }
 \description{
-This function performs a comparative analysis of flow cytometry data across multiple devices.
-It includes basic sample statistics, gating, density plots, FlowSOM clustering, and marker intensity comparisons.
+Performs a standardized cross-device comparison pipeline for flow cytometry data.
+This includes gating, marker transformation, FlowSOM clustering, density and MFI plots,
+and optionally optimal transport distance (OTD) analysis. Can save or load preprocessed data for efficiency.
 }

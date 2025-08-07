@@ -23,33 +23,51 @@ cycompare_preparation(
 )
 }
 \arguments{
-\item{flowframes}{A named list of \code{flowFrame} objects. Names must match sample identifiers in \code{df}.}
+\item{flowframes}{Named list of \code{flowFrame} objects with raw flow cytometry data. Names must match entries in \code{df$File}.}
 
-\item{df}{A data.frame containing metadata for each sample, including a "Device" column.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
-\item{ff_columns_relevant}{A character vector of column names to retain after gating (e.g., marker channels).}
+\item{ff_columns_relevant}{Character vector of marker/feature columns to use for clustering and modeling.}
 
-\item{device_colors}{Either a named character vector mapping device names to colors, or a function \code{f(n)} returning \code{n} colors.
-Defaults to using \code{RColorBrewer::brewer.pal(n, "Dark2")}.}
+\item{device_colors}{Either a named vector or a function returning colors for each device.}
 
-\item{gatingsets}{A named list of \code{GatingSet} objects used for gating, one per sample.}
+\item{gatingsets}{Named list of gating sets used to extract primary populations. One gating set per sample.}
 
-\item{gatename_primary}{The name of the primary gate used to subset events (e.g., "Live").}
+\item{gatename_primary}{String specifying the gate used for downstream data (e.g., \code{"CD3+"}).}
 
-\item{n_events_postgate}{Exact number of events to retain per sample after gating. Might upsample cells. Default is 10,000. See \code{cytoBench::subsample_ff}.}
+\item{n_events_postgate}{Maximum number of events to retain per sample after gating (default: 10,000).}
 
-\item{seed}{Random seed for reproducibility when downsampling. Default is 42.}
+\item{marker_to_gate}{Named vector mapping markers to their associated gate name.
+Later used for plotting.}
+
+\item{seed}{Integer.
+Random seed for reproducibility during subsampling. Default is 42.}
+
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).
+A supersample collects samples of same origin: A study collects samples from
+multiple donors/patients, a patient might be in multiple times.}
+
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).
+Each final biologically different sample could be measured with a different technology,
+cytometer, or lab but SHOULD have the same values.}
+
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
+
+\item{transformlist}{A named list or function defining transformations for \code{ff_columns_relevant}.
+All markers listed must be present. If provided as a function or unnamed list, it is recycled.}
 }
 \value{
-A list with the following elements:
+A named list with the following elements:
 \describe{
-\item{gated_ff}{A list of gated and downsampled \code{flowFrame} objects, keeping only relevant columns.}
-\item{counts_joint}{A data.table with per-sample gated cell counts merged with metadata.}
-\item{device_colors}{Named vector of device colors used, auto-assigned if a function was provided.}
+\item{gated_ff}{Named list of gated and downsampled \code{flowFrame}s, reduced to \code{ff_columns_relevant}.}
+\item{counts_joint}{Merged \code{data.table} combining per-sample cell counts (from gating) and metadata (\code{df}).}
+\item{device_colors}{Named vector of device color assignments. Auto-generated if not provided explicitly.}
+\item{marker_to_gate}{The (possibly adjusted) mapping from markers to gates used during validation.}
+\item{gatename_primary}{Name of the gate used to subset events (typically \code{"Live"} or \code{"CD3+"}).}
 }
 }
 \description{
-This function applies a primary gating step to flow cytometry data,
-assigns colors to devices, and prepares both gated events and metadata
-for downstream analyses such as visualization or normalization.
+Applies a primary gating step to flow cytometry samples, assigns colors to devices,
+and returns gated data and metadata for downstream clustering, modeling, or plotting.
 }

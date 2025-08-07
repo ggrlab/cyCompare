@@ -16,28 +16,41 @@ calc_ROC_grouped(
 )
 }
 \arguments{
-\item{df}{Data frame input (not used but kept for compatibility).}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
-\item{result_grouping}{A data frame containing prediction results and relevant metadata columns for grouping.}
+\item{result_grouping}{A data frame containing prediction results and metadata columns used for grouping
+(e.g., \code{outcome_}, \code{model_}, \code{clustering_}, and those specified by \verb{dfcol_*}).}
 
-\item{dfcol_grouping_supersamples}{Character vector of column names used for higher-level grouping (e.g., "Study").}
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).
+A supersample collects samples of same origin: A study collects samples from
+multiple donors/patients, a patient might be in multiple times.}
 
-\item{dfcol_grouping_samples}{Character, name of the column used for sample-level grouping (e.g., "Device").}
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).
+Each final biologically different sample could be measured with a different technology,
+cytometer, or lab but SHOULD have the same values.}
 
-\item{dfcol_outcomes}{Character vector of column names representing different outcomes (e.g., \code{c("outcome_1", "outcome_2")}).}
+\item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
-\item{dfcol_train_validation_other}{Character, column name that differentiates between train/validation/test sets.}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
 \item{dv_class_positive}{Named vector specifying the positive class for each outcome (e.g., \code{c("outcome_1" = "A", "outcome_2" = 5.1)}).}
 
-\item{...}{Additional arguments passed to internal functions (currently unused).}
+\item{...}{Currently unused; included for extensibility.}
 }
 \value{
-A tibble containing grouped ROC metrics, including coordinates extracted at specified thresholds.
+A tibble containing grouped ROC statistics for each group defined by metadata. Includes:
+\itemize{
+\item ROC coordinates at each group's validation threshold.
+\item AUC and confidence intervals.
+\item Confusion matrix-based metrics (accuracy, kappa, null accuracy, etc.).
+\item Log loss and class frequencies.
+}
 }
 \description{
-Computes ROC (Receiver Operating Characteristic) statistics for prediction results, grouped by specified metadata columns.
-The positive class label is dynamically determined per outcome using the \code{dv_class_positive} mapping.
+Computes ROC (Receiver Operating Characteristic) statistics for predicted outcomes,
+grouped by relevant metadata such as device, model, and outcome type.
+The positive class label is dynamically determined for each outcome using the \code{dv_class_positive} mapping.
 }
 \examples{
 \dontrun{

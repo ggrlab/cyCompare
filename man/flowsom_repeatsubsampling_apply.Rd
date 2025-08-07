@@ -2,7 +2,7 @@
 % Please edit documentation in R/flowsom_repeatsubsampling_apply.R
 \name{flowsom_repeatsubsampling_apply}
 \alias{flowsom_repeatsubsampling_apply}
-\title{Apply FlowSOM prediction on repeated subsamplings}
+\title{Apply FlowSOM Prediction After Repeated Subsampling}
 \usage{
 flowsom_repeatsubsampling_apply(
   ff_list,
@@ -20,34 +20,37 @@ flowsom_repeatsubsampling_apply(
 \item{ff_list}{A list of \code{flowFrame} objects to be subsampled and clustered.}
 
 \item{outdir}{A character string indicating the output directory where results will be saved.
-If \code{outdir} exists, the results will be written using \code{flowsom_wrapper_saving()}.}
+If the path exists, results will be written using \code{flowsom_wrapper_saving()}.}
 
-\item{flowsom_result}{A trained FlowSOM object (typically returned by \code{flowsom_repeatsubsampling()} which called \code{cytobench::flowSOM_optimal()}).}
+\item{flowsom_result}{A trained FlowSOM result (usually from \code{flowsom_repeatsubsampling()} or
+\code{cytobench::flowSOM_optimal()}).}
 
-\item{n_metacluster}{Integer. Number of metaclusters to use when predicting clusters.
+\item{n_metacluster}{Integer. Number of metaclusters to use when predicting.
 If NULL, the number of metaclusters in \code{flowsom_result} will be used.}
 
-\item{n_subsampling}{Integer. Number of repeated subsampling iterations to perform. Default is 1.}
+\item{n_subsampling}{Integer. Number of subsampling iterations (default: 1).}
 
 \item{n_subsampled_cells}{Integer. Number of cells per subsample. If the original sample is smaller,
-upsampling is performed; otherwise, downsampling. If you want to use the original sample size,
-set \code{n_subsampled_cells} to \code{Inf}. See \code{cytobench::subsample_ff()} for details.}
+upsampling is performed; otherwise, downsampling. See \code{cytobench::subsample_ff()} for details.
+Use \code{Inf} to avoid subsampling.}
 
-\item{subsampling_seed_first}{Integer. Base seed for reproducible subsampling. Each subsample iteration
-uses \code{subsampling_seed_first + i - 1}.}
+\item{subsampling_seed_first}{Integer. Base seed used for deterministic subsampling.
+Each subsample iteration uses \code{subsampling_seed_first + i - 1}.}
 
-\item{remove_results_keywords}{Character vector. Names of result slots in \code{flowsom_result} to be removed from output.
+\item{remove_results_keywords}{Character vector of component names to strip from the result.
+Names of result slots in \code{flowsom_result} to be removed from output.
 This is useful to avoid returning large objects that are not needed for further analysis.}
 
 \item{...}{Not used here, but potentially relevant if the calling function is used in a
 pipeline with additional parameters.}
 }
 \value{
-A nested list of FlowSOM prediction results. For each data slot, proportions of clusters per sample
-are returned (after normalization). Slots defined in \code{remove_results_keywords} are removed. Each list entry
+A nested list containing FlowSOM prediction results for each subsample, with cluster proportions normalized per sample.
+Large intermediate objects can be removed based on \code{remove_results_keywords}. Each list entry
 contains subsampling-specific results.
 }
 \description{
-This function performs repeated subsampling of a list of flowFrames, applies a trained FlowSOM model
-to the subsampled data, and returns predicted cluster results with normalized cluster proportions.
+Performs repeated subsampling of  a list of flowFrames and applies a trained FlowSOM model
+to each subsample. Cluster proportions are normalized per sample. Results can be saved to disk
+or returned in memory.
 }
