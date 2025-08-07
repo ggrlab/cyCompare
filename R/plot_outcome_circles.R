@@ -29,6 +29,7 @@
 plot_outcome_circles <- function(df,
                                  dfcol_grouping_supersamples,
                                  dfcol_outcomes) {
+    col_supersamples <- count <- NULL
     # Create a new column encoding supersample groupings
     df[["col_supersamples"]] <- interaction(
         df[, dfcol_grouping_supersamples]
