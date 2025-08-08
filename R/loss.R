@@ -14,18 +14,12 @@
 #' @param ...
 #' Additional arguments passed to `lossfun`.
 
-#' @param n_breaks Integer. Number of histogram bins to use (default is 100).
-#' @param emd_fun A function to compute the Earth Mover's Distance between two binned distributions.
-#'  Must accept two matrices of equal shape and return a numeric scalar. Default is `lossfun_hist_weighted`
-#'  which uses `emdist::emd2d`.
-#' @param ... Additional arguments passed to `emd_fun`.
-#'
-#' @return A numeric value: the EMD between `mat1` and `mat2` over all columns.
-#'   Currently returns only the EMD between the two matrices as a scalar (element [2,1] of the matrix).
+#' @return A numeric value: the lossfun between `mat1` and `mat2` over all columns.
+#'   Currently returns only the lossfun between the two matrices as a scalar (element `[2,1]` of the matrix).
 #'
 #' @details
 #' Each matrix is converted into a set of histograms (one per column) using globally shared bin breaks.
-#' EMD is then computed between the two matrices by applying `emd_fun()` to the binned data.
+#' lossfun is then computed between the two matrices by applying `lossfun()` to the binned data.
 #'
 #' @examples
 #' mat1 <- matrix(rnorm(50), ncol = 10)
@@ -103,13 +97,14 @@ lossfun_hist <- function(
 #' # Usually you would not use this function directly, but rather
 #' # use lossfun_hist() which calls this internally.
 #' lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_cytonorm)
-lossfun_hist_cytonorm <- function(x, y, ...) {
+lossfun_hist_cytonorm <- function(mat1, mat2, ...) {
     paramlist <- list(...)
     # ydist holds the width of a single bin
     paramlist[["ydist"]] <- NULL
-    do.call(emdist::emd2d, c(list(x, y, dist = "euclidean"), paramlist))
+    do.call(emdist::emd2d, c(list(mat1, mat2, dist = "euclidean"), paramlist))
 }
 #' @rdname lossfun_hist_cytonorm
+#' @inheritParams lossfun_hist
 #' @export
 #' @examples
 #' mat1 <- matrix(rnorm(50), ncol = 10)
@@ -118,7 +113,7 @@ lossfun_hist_cytonorm <- function(x, y, ...) {
 #' # Usually you would not use this function directly, but rather
 #' # use lossfun_hist() which calls this internally.
 #' lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted)
-lossfun_hist_weighted <- function(x, y, ...) {
+lossfun_hist_weighted <- function(mat1, mat2, ...) {
     paramlist <- list(...)
-    do.call(emdist::emd2d, c(list(x, y, dist = "euclidean"), paramlist))
+    do.call(emdist::emd2d, c(list(mat1, mat2, dist = "euclidean"), paramlist))
 }

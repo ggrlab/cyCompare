@@ -17,7 +17,6 @@
 #' @param OTD_kwargs_loss Named list of arguments for the OTD loss function.
 #' @param do_flowsom Logical. Whether to perform FlowSOM clustering and plot comparisons (default: `TRUE`).
 #' @param flowsom_seed An integer specifying the random seed for FlowSOM clustering (default: `3711283`).
-#' @param ... Passed to `plot_flowsom()` (e.g., plotting customization).
 #'
 #' @return A named list of `ggplot2` plots:
 #' \describe{
@@ -109,7 +108,7 @@ cycompare <- function(
 
     ## 1.2 & 1.3: Gated cell counts and percentages
     p1.2_3 <- plot_counts(
-        dt_count = counts_joint,
+        dt_counts = counts_joint,
         device_colors = device_colors
     )
 

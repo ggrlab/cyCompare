@@ -30,6 +30,10 @@ must contain the \code{ncells_per_x} list with the number of cells per cluster a
 \item{MA_horizontal_lines_FC}{Fold-change reference lines.}
 
 \item{MA_bins}{Number of bins for 2D histogram.}
+
+\item{zero_handling_log2_value}{Value to replace infinite log2 fold-changes with. They occur when a cluster has
+cells in one group but not in the other. If \code{NULL}, it is set to the maximum absolute
+log2 fold-change.}
 }
 \value{
 A list of lists of MA plots.

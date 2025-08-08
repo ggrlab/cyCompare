@@ -1,4 +1,3 @@
-devtools::load_all()
 test_that("CyCompare, outcomes", {
     tempdir <- cytobench::local_tempdir_time()
     prepdata <- prepare_testdata_fcs(tempdir = tempdir)

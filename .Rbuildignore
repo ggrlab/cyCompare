@@ -10,3 +10,5 @@
 ^example_data$
 ^pkgdown$
 intermediate/
+.lintr
+^.*removeme.*$

@@ -1,6 +1,6 @@
 Package: cyCompare
 Title: What the Package Does (One Line, Title Case)
-Version: 0.0.1.006
+Version: 0.0.1.007
 Authors@R: 
     person("Gunther", "Glehr", , "gunthergl@gmx.net", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1495-9162"))
@@ -24,4 +24,18 @@ Imports:
     flowWorkspace,
     ggfortify,
     RColorBrewer, 
-    cytobench
+    cytobench,
+    caret,
+    ggh4x, 
+    ggplot2, 
+    ggpubr, 
+    glmnet, 
+    mlr3,
+    mlr3measures, 
+    paradox, 
+    pROC, 
+    psych, 
+    qs, 
+    rlang, 
+    tibble, 
+    tidyr

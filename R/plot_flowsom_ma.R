@@ -9,6 +9,10 @@
 #' @param dfcol_train_validation_other Optional column for faceting.
 #' @param MA_horizontal_lines_FC Fold-change reference lines.
 #' @param MA_bins Number of bins for 2D histogram.
+#' @param zero_handling_log2_value
+#' Value to replace infinite log2 fold-changes with. They occur when a cluster has
+#' cells in one group but not in the other. If `NULL`, it is set to the maximum absolute
+#' log2 fold-change.
 #'
 #' @return A list of lists of MA plots.
 #' @export
@@ -57,7 +61,7 @@ plot_flowsom_ma <- function(fs_pred,
             )
 
         # All pairwise device comparisons
-        device_combinations <- combn(names(device_colors), 2)
+        device_combinations <- stats::combn(names(device_colors), 2)
         plotlist <- list()
 
         for (combination_i in seq_len(ncol(device_combinations))) {

@@ -39,6 +39,7 @@ cycompare_preparation <- function(
     dfcol_grouping_samples = "Device",
     dfcol_train_validation_other = NULL,
     transformlist = NULL) {
+    pop <- NULL # R CMD check compatibility
     # --- 1. Check required columns in metadata ---
     mandatory_df_cols <- c(
         "File", "SuperSample", "Sample", dfcol_grouping_samples[[1]],
@@ -69,7 +70,7 @@ cycompare_preparation <- function(
     if (!all(unique_devices %in% names(device_colors))) {
         if (is.function(device_colors)) {
             # Auto-assign colors (ensure at least 3 colors for RColorBrewer)
-            device_colors <- setNames(
+            device_colors <- stats::setNames(
                 device_colors(length(unique_devices))[seq_along(unique_devices)],
                 unique_devices
             )
@@ -128,12 +129,14 @@ cycompare_preparation <- function(
             gated[["counts"]][["sample"]] <- x
 
             # Use colnames instead of markernames in count table (ensures transformation works)
-            name_map <- setNames(
+            name_map <- stats::setNames(
                 names(flowCore::markernames(gated[["flowset_gated"]])),
                 flowCore::markernames(gated[["flowset_gated"]])
             )
 
-            colnames(gated[["counts"]])[colnames(gated[["counts"]]) %in% names(name_map)] <- na.omit(name_map[colnames(gated[["counts"]])])
+            colnames(gated[["counts"]])[colnames(gated[["counts"]]) %in% names(name_map)] <- stats::na.omit(
+                name_map[colnames(gated[["counts"]])]
+            )
             return(gated)
         }
     )
@@ -147,7 +150,7 @@ cycompare_preparation <- function(
     counts_joint <- data.table::data.table(df)[counts_ff, on = "File"]
 
     # Sanity check: were any gates nearly empty?
-    if (quantile(counts_joint[pop == gatename_primary][["count"]], 0.9) < 100) {
+    if (stats::quantile(counts_joint[pop == gatename_primary][["count"]], 0.9) < 100) {
         stop("Primary gate yields <100 events in 90th percentile - check `gatename_primary`.")
     }
 

@@ -11,6 +11,9 @@
 #' @param dfcol_train_validation_other Character scalar indicating the train/validation/test split.
 #' @param dv_class_positive Named vector mapping outcomes to their positive class labels.
 #' @param device_colors Named vector assigning colors to devices.
+#' @param names_grouping_train
+#' Character vector of grouping columns used for training (e.g., "Study", "Device").
+#' For each training-grouping, the function computes the ICC and plots predictions.
 #'
 #' @return A list with:
 #'   \item{icc_summary}{ICC statistics per grouping.}
@@ -24,6 +27,7 @@ plot_lineplot_icc <- function(preds_bound,
                               dfcol_train_validation_other,
                               dv_class_positive,
                               device_colors) {
+    xaxis_current <- ICC2k_ICC <- outcome_ <- NULL # For R CMD check compatibility
     icc_summary_list <- list()
     groupings <- dplyr::group_by(
         preds_bound,

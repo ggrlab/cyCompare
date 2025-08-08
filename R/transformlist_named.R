@@ -24,7 +24,7 @@ transformlist_named <- function(transformlist, relevant_columns, flowcore = FALS
         if (is.function(transformlist)) {
             transformlist <- list(transformlist)
         }
-        transformlist <- setNames(rep(transformlist, length(relevant_columns)), relevant_columns)
+        transformlist <- stats::setNames(rep(transformlist, length(relevant_columns)), relevant_columns)
     }
 
     # Return either a flowCore::transformList or the named list

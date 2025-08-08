@@ -85,7 +85,19 @@ Default: \code{asinh(x / 1e3)}.}
 
 \item{kwargs_modelling}{Named list of modeling parameters (e.g., learners, tuning, loss function).}
 
+\item{model_counts_proportions}{Character vector indicating which cluster result should be used for the models.
+Defaults to \code{c("counts", "proportions")}.
+If "counts", uses \code{ncells_per_x}; if "proportions", uses \code{proportions_per_x}.}
+
+\item{model_which_elements}{Character vector indicating which elements of the clustering results to use for modeling.
+Defaults to \code{c("metaCluster")}.}
+
 \item{dv_class_positive}{Named vector specifying the positive class for each outcome (e.g., \code{c("outcome_1" = "A", "outcome_2" = 5.1)}).}
+
+\item{prepared_saveload}{Optional character path. If the file exists, will load preprocessed data with \code{qs::qread()};
+if not, will save it after processing using \code{qs::qsave()}.}
+
+\item{postgate_sample_seed}{Integer seed used for reproducible post-gating subsampling (default: 42).}
 }
 \value{
 A named list with the following structure:

@@ -84,8 +84,6 @@ if not, will save it after processing using \code{qs::qsave()}.}
 \item{ydim}{An integer specifying the y-dimension of the FlowSOM grid (default: 3).}
 
 \item{flowsom_seed}{An integer specifying the random seed for FlowSOM clustering (default: \code{3711283}).}
-
-\item{...}{Passed to \code{plot_flowsom()} (e.g., plotting customization).}
 }
 \value{
 A named list of \code{ggplot2} plots:

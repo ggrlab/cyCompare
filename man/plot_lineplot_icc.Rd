@@ -17,6 +17,9 @@ plot_lineplot_icc(
 \arguments{
 \item{preds_bound}{Data frame of predictions in long format.}
 
+\item{names_grouping_train}{Character vector of grouping columns used for training (e.g., "Study", "Device").
+For each training-grouping, the function computes the ICC and plots predictions.}
+
 \item{dfcol_grouping_samples}{Character scalar: column representing the device (e.g., "Device").}
 
 \item{dfcol_grouping_supersamples}{Character vector of grouping columns (e.g., "Study").}

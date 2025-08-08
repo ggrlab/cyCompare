@@ -27,6 +27,7 @@
 #' coords_helper(proc_result = r)
 #' coords_helper(proc_result = r, threshold = 0.5)
 coords_helper <- function(proc_result, threshold = NA) {
+    proc <- auc <- auc_ci.low <- auc_ci.high <- NULL # Avoid R CMD check notes
     # Choose threshold: use optimal by default, or specified threshold
     if (is.na(threshold)) {
         coords <- pROC::coords(

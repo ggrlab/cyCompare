@@ -52,6 +52,18 @@
 #' Named list of modeling parameters (e.g., learners, tuning, loss function).
 #' @param dv_class_positive
 #'  Named vector specifying the positive class for each outcome (e.g., `c("outcome_1" = "A", "outcome_2" = 5.1)`).
+#' @param model_counts_proportions
+#' Character vector indicating which cluster result should be used for the models.
+#' Defaults to `c("counts", "proportions")`.
+#' If "counts", uses `ncells_per_x`; if "proportions", uses `proportions_per_x`.
+#' @param model_which_elements
+#' Character vector indicating which elements of the clustering results to use for modeling.
+#' Defaults to `c("metaCluster")`.
+#' @param prepared_saveload
+#' Optional character path. If the file exists, will load preprocessed data with `qs::qread()`;
+#' if not, will save it after processing using `qs::qsave()`.
+#' @param postgate_sample_seed
+#' Integer seed used for reproducible post-gating subsampling (default: 42).
 #'
 #' @return A named list with the following structure:
 #' \describe{

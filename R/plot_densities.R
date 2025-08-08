@@ -103,7 +103,7 @@ plot_densities <- function(
         if (length(x_noNA) == 0) {
             res <- data.table::data.table(x = NA_real_, y = NA_real_)
         } else {
-            d <- density(transform_x(x_noNA), n = density_n)
+            d <- stats::density(transform_x(x_noNA), n = density_n)
             res <- data.table::data.table(x = d$x, y = d$y)
         }
         return(res)
@@ -121,7 +121,7 @@ plot_densities <- function(
     if (!is.na(limit_density_quantile)) {
         # Limit the density to a certain quantile within each variable
         # calculate the top quantile for each variable
-        top_quantile <- densities[, quantile(y, limit_density_quantile), by = variable]
+        top_quantile <- densities[, stats::quantile(y, limit_density_quantile), by = variable]
         densities <- densities[top_quantile, on = "variable"][, y := pmin(y, V1)][, V1 := NULL]
     }
 

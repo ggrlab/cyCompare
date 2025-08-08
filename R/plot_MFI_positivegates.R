@@ -28,6 +28,10 @@
 #'
 #' @export
 plot_MFI_positivegates <- function(dt_count_mfi, marker_to_gate, device_colors, transformlist = NULL, meanratio = FALSE) {
+    # For R CMD check compatibility
+    . <- MFI <- File <- Time <- Device <- marker <- variable <- mfi_all_gates <- mfi_by_meanMFI <- NULL
+    mean_mfi <- NULL
+
     tmp <- marker_to_gate_count(marker_to_gate, dt_count_mfi = dt_count_mfi)
     marker_to_gate_dt <- tmp[["marker_to_gate_dt"]]
     dt_count_mfi_relevant <- tmp[["dt_count_mfi_relevant"]]

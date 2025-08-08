@@ -22,7 +22,8 @@ and a unique \code{File} column linking to \code{names(flowframes)}..}
 
 \item{outdir}{A character string specifying the output directory to save model results. Not used here.}
 
-\item{result_grouping}{A list returned from the grouping pipeline. Must include \code{clustering} (with proportions) and \code{models} (trained model list).}
+\item{result_grouping}{A list returned from the grouping pipeline. Must include \code{clustering} (with proportions) and
+\code{models} (trained model list).}
 
 \item{grouping}{A \code{data.frame} with one row per sample,  that defines grouping variables for merging with \code{df}.}
 
@@ -30,8 +31,15 @@ and a unique \code{File} column linking to \code{names(flowframes)}..}
 
 \item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
+\item{counts_proportions}{A character string indicating the type of clustering proportions to use
+(e.g., "proportions_per_x"). This should match the names in \code{result_grouping[["clustering"]]}.
+This is used to retrieve the clustering proportions for each sample.
+Default is "proportions_per_x".
+This should match the names in \code{result_grouping[["clustering"]]}.}
+
 \item{bygroup}{Logical;
-If FALSE, the function will apply each model to the entire dataset (result_grouping[\link{"clustering"}][\link{"proportions_per_x"}][\link{"metaCluster"}]).
+If FALSE, the function will apply each model to the entire dataset
+(\code{result_grouping[["clustering"]][[counts_proportions]][[finalmodel_cluster_selection]]}).
 If TRUE, the \code{FALSE} dataset is limited to the rows mathing the \code{grouping} variable.}
 
 \item{...}{Not used.}

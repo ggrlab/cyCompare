@@ -1,7 +1,8 @@
 #' Plot multiple ROC curves with ggplot2
 #'
 #' This function generates a combined ROC plot from a named list of `pROC::roc` objects.
-#' It allows customization by mapping the curve identity to either color or linetype and supports additional arguments passed to `geom_line`.
+#' It allows customization by mapping the curve identity to either color or linetype and
+#' supports additional arguments passed to `geom_line`.
 #'
 #' The function returns a list containing:
 #' - A full ROC plot with legend
@@ -28,7 +29,12 @@
 #' data(aSAH, package = "pROC")
 #' r1 <- pROC::roc(aSAH$outcome, aSAH$s100b, levels = c("Good", "Poor"), direction = "<")
 #' r2 <- pROC::roc(aSAH$outcome, -aSAH$s100b, levels = c("Good", "Poor"), direction = "<")
-#' r3 <- pROC::roc(aSAH$outcome, aSAH$s100b + rnorm(nrow(aSAH), 0, .1), levels = c("Good", "Poor"), direction = "<")
+#' r3 <- pROC::roc(
+#'     aSAH$outcome,
+#'     aSAH$s100b + rnorm(nrow(aSAH), 0, .1),
+#'     levels = c("Good", "Poor"),
+#'     direction = "<"
+#' )
 #' named_proc_list <- list(
 #'     "ROC_1" = r1,
 #'     "ROC_2" = r2,
@@ -45,6 +51,7 @@
 #'     col_or_linetype = "linetype", geom_line_args = list(size = 1)
 #' ))
 plot_ggroc_multiple <- function(named_proc_list, col_or_linetype = c("linetype", "color"), geom_line_args = NULL) {
+    `1-specificity` <- sensitivity <- name <- NULL # R CMD check compatibility
     # Append AUC and confidence intervals to each curve's name
     names(named_proc_list) <- paste0(
         names(named_proc_list),

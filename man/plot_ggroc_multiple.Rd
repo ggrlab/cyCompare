@@ -28,7 +28,8 @@ A named list with three ggplot2 objects:
 }
 \description{
 This function generates a combined ROC plot from a named list of \code{pROC::roc} objects.
-It allows customization by mapping the curve identity to either color or linetype and supports additional arguments passed to \code{geom_line}.
+It allows customization by mapping the curve identity to either color or linetype and
+supports additional arguments passed to \code{geom_line}.
 }
 \details{
 The function returns a list containing:
@@ -42,7 +43,12 @@ The function returns a list containing:
 data(aSAH, package = "pROC")
 r1 <- pROC::roc(aSAH$outcome, aSAH$s100b, levels = c("Good", "Poor"), direction = "<")
 r2 <- pROC::roc(aSAH$outcome, -aSAH$s100b, levels = c("Good", "Poor"), direction = "<")
-r3 <- pROC::roc(aSAH$outcome, aSAH$s100b + rnorm(nrow(aSAH), 0, .1), levels = c("Good", "Poor"), direction = "<")
+r3 <- pROC::roc(
+    aSAH$outcome,
+    aSAH$s100b + rnorm(nrow(aSAH), 0, .1),
+    levels = c("Good", "Poor"),
+    direction = "<"
+)
 named_proc_list <- list(
     "ROC_1" = r1,
     "ROC_2" = r2,

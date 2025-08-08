@@ -44,6 +44,16 @@ sample_A_i,sample_B_j,dist,time
 ...
 }}
 
+\item{intermediate_file}{A character string specifying the file to write intermediate results to.
+Default is "distances_intermediate.csv".
+If \code{write_intermediate = TRUE}, this file will be created or overwritten.
+If \code{write_intermediate = FALSE}, this parameter is ignored.
+If the file exists, it will be overwritten.
+If the file does not exist, it will be created.
+If \code{write_intermediate = TRUE}, the file will be written in append mode
+(i.e., new results will be added to the end of the file).
+If \code{write_intermediate = FALSE}, the file will not be written.}
+
 \item{should_skip}{A function with signature \verb{function(i, j)} returning \code{TRUE} if the pair (i, j)
 should be skipped and its loss NOT calculated.
 By default, the function skips all pairs where \code{i >= j}. This is useful for symmetric loss functions
@@ -59,6 +69,9 @@ Useful should_skip functions are:
 }}
 
 \item{take_time}{Logical; if \code{TRUE}, take timing information.}
+
+\item{return_as_matrix}{Logical; if \code{TRUE}, returns a matrix of distances.
+If \code{FALSE}, returns a \code{data.table} with columns \code{sample_A_i}, \code{sample_B_j}, \code{dist}, \code{time}, \code{sample_A}, \code{sample_B}.}
 
 \item{...}{Additional arguments passed to the \code{loss} function.}
 }

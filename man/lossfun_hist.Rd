@@ -11,19 +11,15 @@ lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted, ...)
 
 \item{mat2}{A second numeric matrix, same shape and interpretation as \code{mat1}.}
 
-\item{n_breaks}{Integer. Number of histogram bins to use (default is 100).}
+\item{n_breaks}{Integer (default: 100). Number of histogram bins to use. Must be at least 3.}
 
 \item{lossfun}{A function that takes two matrices of binned counts and computes a loss. Default is \code{lossfun_hist_weighted}.}
 
-\item{...}{Additional arguments passed to \code{emd_fun}.}
-
-\item{emd_fun}{A function to compute the Earth Mover's Distance between two binned distributions.
-Must accept two matrices of equal shape and return a numeric scalar. Default is \code{lossfun_hist_weighted}
-which uses \code{emdist::emd2d}.}
+\item{...}{Additional arguments passed to \code{lossfun}.}
 }
 \value{
-A numeric value: the EMD between \code{mat1} and \code{mat2} over all columns.
-Currently returns only the EMD between the two matrices as a scalar (element \link{2,1} of the matrix).
+A numeric value: the lossfun between \code{mat1} and \code{mat2} over all columns.
+Currently returns only the lossfun between the two matrices as a scalar (element \verb{[2,1]} of the matrix).
 }
 \description{
 This function converts each column of two numeric matrices into histograms using a shared global binning scheme,
@@ -32,7 +28,7 @@ then computes a distance (e.g., Earth Mover's Distance) between the histogrammed
 }
 \details{
 Each matrix is converted into a set of histograms (one per column) using globally shared bin breaks.
-EMD is then computed between the two matrices by applying \code{emd_fun()} to the binned data.
+lossfun is then computed between the two matrices by applying \code{lossfun()} to the binned data.
 }
 \examples{
 mat1 <- matrix(rnorm(50), ncol = 10)

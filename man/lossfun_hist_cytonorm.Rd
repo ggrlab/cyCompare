@@ -5,12 +5,16 @@
 \alias{lossfun_hist_weighted}
 \title{Wrapper Functions for Histogram-Based Loss Calculation}
 \usage{
-lossfun_hist_cytonorm(x, y, ...)
+lossfun_hist_cytonorm(mat1, mat2, ...)
 
-lossfun_hist_weighted(x, y, ...)
+lossfun_hist_weighted(mat1, mat2, ...)
 }
 \arguments{
-\item{...}{Additional arguments passed to \code{emd_fun}.}
+\item{mat1}{A numeric matrix. Each column represents a variable (e.g., marker) and rows are observations (e.g., cells).}
+
+\item{mat2}{A second numeric matrix, same shape and interpretation as \code{mat1}.}
+
+\item{...}{Additional arguments passed to \code{lossfun}.}
 }
 \value{
 A numeric value representing the loss (EMD) between the input matrices.
