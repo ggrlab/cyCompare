@@ -200,8 +200,8 @@ prepare_testdata <- function() {
 #'   \item Training and evaluating models using predefined dataset splits.
 #' }
 #'
-#' All samples are written to `.fcs` files \emph{n\_repeats} times with a suffix
-#' \code{"_<repeat_index>.fcs"}.
+#' All samples are written to `.fcs` files \emph{n\_repeats} times with a suffix for
+#' discrimination.
 #'
 #' @export
 #' @keywords testing datasets

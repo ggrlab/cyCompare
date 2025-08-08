@@ -62,8 +62,8 @@ This setup allows you to explore common analysis tasks such as:
 \item Training and evaluating models using predefined dataset splits.
 }
 
-All samples are written to \code{.fcs} files \emph{n\_repeats} times with a suffix
-\code{"_<repeat_index>.fcs"}.
+All samples are written to \code{.fcs} files \emph{n\_repeats} times with a suffix for
+discrimination.
 }
 \keyword{datasets}
 \keyword{testing}
