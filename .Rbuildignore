@@ -12,3 +12,4 @@
 intermediate/
 .lintr
 ^.*removeme.*$
+^vignettes/articles$

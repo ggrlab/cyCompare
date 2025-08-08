@@ -67,6 +67,9 @@ cycompare <- function(
     xdim = 3,
     ydim = 3,
     flowsom_seed = 3711283) {
+    if ("flowSet" %in% class(flowframes)) {
+        flowframes <- flowCore::flowSet_to_list(flowframes)
+    }
     # --- Load or prepare data ---
     if (is.character(prepared_saveload) && file.exists(prepared_saveload)) {
         message("Loading prepared data from ", prepared_saveload)

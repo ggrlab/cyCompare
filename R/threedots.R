@@ -38,5 +38,8 @@
 #' @return The result of the `autoplot.prcomp` function.
 #' @keywords re-export
 autoplot.prcomp <- function(...) {
+    # The following line is necessary to avoid R CMD check warnings that
+    # ggfortify is never used even if we have it in the Imports field.
+    ggfortify::unscale(base::scale(data.frame(1:3)))
     `%:::%`("ggfortify", "autoplot.prcomp")(...)
 }

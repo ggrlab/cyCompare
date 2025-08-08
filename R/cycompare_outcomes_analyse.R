@@ -177,8 +177,8 @@ cycompare_outcomes_analyse <- function(
     # # A tibble: 2 x 3
     #   Study Device   train_validation_test
     #   <chr> <chr>    <chr>
-    # 1 BAD   aurora   train
-    # 2 BAD   fortessa train
+    # 1 EX   aurora   train
+    # 2 EX   fortessa train
     #
     # Apart from this "groups" return element, the "result" element is a list corresponding
     # to the groups in order of the [["groups"]] tibble.

@@ -2,7 +2,7 @@ test_that("CyCompare, outcomes", {
     tempdir <- cytobench::local_tempdir_time()
     prepdata <- prepare_testdata_fcs(tempdir = tempdir)
 
-    pacman::p_load("mlr3learners")
+    # pacman::p_load("mlr3learners")
 
     tempdir2 <- cytobench::local_tempdir_time()
     result_analysis <- cycompare_outcomes_analyse(
@@ -22,24 +22,24 @@ test_that("CyCompare, outcomes", {
     )
     generated_filelist <- list.files(tempdir2, recursive = TRUE)
     expected_filelist <- c(
-        "clustering/Study.BAD___Device.CyA___train_validation_test.train/p1-FlowSOM.pdf",
-        "clustering/Study.BAD___Device.CyA___train_validation_test.train/r1-FlowSOM_result_train.qs",
-        "clustering/Study.BAD___Device.CyA___train_validation_test.train/r2-FlowSOM_result_train_predictions.qs",
-        "clustering/Study.BAD___Device.CyB___train_validation_test.train/p1-FlowSOM.pdf",
-        "clustering/Study.BAD___Device.CyB___train_validation_test.train/r1-FlowSOM_result_train.qs",
-        "clustering/Study.BAD___Device.CyB___train_validation_test.train/r2-FlowSOM_result_train_predictions.qs",
-        "clustering_applied/Study.BAD___Device.CyA___train_validation_test.train.qs",
-        "clustering_applied/Study.BAD___Device.CyB___train_validation_test.train.qs",
+        "clustering/Study.EX___Device.CyA___train_validation_test.train/p1-FlowSOM.pdf",
+        "clustering/Study.EX___Device.CyA___train_validation_test.train/r1-FlowSOM_result_train.qs",
+        "clustering/Study.EX___Device.CyA___train_validation_test.train/r2-FlowSOM_result_train_predictions.qs",
+        "clustering/Study.EX___Device.CyB___train_validation_test.train/p1-FlowSOM.pdf",
+        "clustering/Study.EX___Device.CyB___train_validation_test.train/r1-FlowSOM_result_train.qs",
+        "clustering/Study.EX___Device.CyB___train_validation_test.train/r2-FlowSOM_result_train_predictions.qs",
+        "clustering_applied/Study.EX___Device.CyA___train_validation_test.train.qs",
+        "clustering_applied/Study.EX___Device.CyB___train_validation_test.train.qs",
         "clustering_applied/ncells_per_cluster.csv",
         "clustering_applied/ncells_per_metaCluster.csv",
         "clustering_applied/proportions_per_cluster.csv",
         "clustering_applied/proportions_per_metaCluster.csv",
-        "models/Study.BAD___Device.CyA___train_validation_test.train/final_models.qs",
-        "models/Study.BAD___Device.CyA___train_validation_test.train/learners_tuned.qs",
-        "models/Study.BAD___Device.CyA___train_validation_test.train/predictions.csv",
-        "models/Study.BAD___Device.CyB___train_validation_test.train/final_models.qs",
-        "models/Study.BAD___Device.CyB___train_validation_test.train/learners_tuned.qs",
-        "models/Study.BAD___Device.CyB___train_validation_test.train/predictions.csv"
+        "models/Study.EX___Device.CyA___train_validation_test.train/final_models.qs",
+        "models/Study.EX___Device.CyA___train_validation_test.train/learners_tuned.qs",
+        "models/Study.EX___Device.CyA___train_validation_test.train/predictions.csv",
+        "models/Study.EX___Device.CyB___train_validation_test.train/final_models.qs",
+        "models/Study.EX___Device.CyB___train_validation_test.train/learners_tuned.qs",
+        "models/Study.EX___Device.CyB___train_validation_test.train/predictions.csv"
     )
     testthat::expect_equal(
         sort(generated_filelist),

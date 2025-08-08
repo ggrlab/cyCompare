@@ -1,0 +1,107 @@
+---
+title: "Get Started"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get Started}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+This article gives you a quick tour of cyCompare. The package helps you compare flow cytometry datasets measured on multiple devices and summarize differences with plots and statistics.
+
+Main entry point: `cyCompare::cycompare()`
+
+Inputs: a `flowCore::flowSet` (or list of `flowFrames`), sample metadata (`data.frame/tibble`), and a few configuration objects (markers, optional gating map, transforms).
+
+Output: a list with figures and summary tables you can use for QC, harmonization checks, and reporting.
+
+
+### Example data
+We'll start with a small, fully reproducible dataset. 
+
+
+```{r}
+library(cyCompare)
+# Synthetic dataset with two devices (CyA, CyB),
+# simple gates, and per-sample metadata.
+td <- prepare_testdata()
+
+# What do we get back?
+names(td)
+str(td$df, 3)
+```
+
+### What is inside?
+
+- `td$fs`: a `flowCore::flowSet` with 6 samples (3 on CyA, 3 on CyB).
+- `td$df`: sample-level metadata with columns:
+  - `Study`, `Device`, `SuperSample`, `Sample`, `File`, `Time`
+  - example outcomes: `outcome_1` (A/B), `outcome_2` (2.3 or 5.1)
+  - split column: `train_validation_test` (`"train"`, `"validation"`, `"test"`)
+- `td$relevant_mn`: vector of marker names (prefixed for test stability)
+- `td$marker_to_gate`: optional mapping from channels to gating paths
+- `td$gatingsets`: a template `GatingSet` per sample
+
+
+`Study` and `Device` are used to group samples, while `SuperSample` is used to identify samples that should be compared together (e.g., same patient). `Sample` is the sample identifier, together with `Study` this uniquely identifies a sample, across studies you 
+might have the same `Sample`. `File` is the file name of the FCS file, and `Time` is the time of measurement.
+
+
+## Minimal run
+
+`cycompare()` needs:
+    - a list or `flowSet` of gated flow frames,
+    - a metadata table,
+    - the relevant marker columns,
+    - a mapping of markers to gates,
+    - the name of the primary gate.
+
+Here's the simplest complete call using the prepared test data:
+
+```{r}
+res <- cycompare(
+    flowframes = td$fs,
+    df = td$df,
+    ff_columns_relevant = names(td$relevant_mn),
+    gatingsets = td$gatingsets,
+    gatename_primary = "/FITC_PE_gate",
+    marker_to_gate = td$marker_to_gate
+)
+```
+
+The result is a named list of plots, tables, and optional FlowSOM / OTD results:
+
+
+```{r}
+names(res)
+```
+
+## Viewing results
+
+You can directly plot elements, for example:
+
+```{r}
+print(res)
+```
+
+Apart from the plots, we currently return the FlowSOM clustering results and the OTD results: 
+```{r}
+res$results_flowsom
+res$calculated_otd
+```
+
+## Next steps
+
+From here you can:
+- Replace the example `flowframes` and `df` with your own data,
+- Adjust the transformation via `transformlist`,
+- Control FlowSOM clustering with `nClus`, `xdim`, and `ydim`,
+- Toggle optional analyses with `do_otd` and `do_flowsom`.
+
+See `?cycompare` for the full list of parameters.

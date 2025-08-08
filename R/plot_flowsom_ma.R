@@ -61,7 +61,7 @@ plot_flowsom_ma <- function(fs_pred,
             )
 
         # All pairwise device comparisons
-        device_combinations <- stats::combn(names(device_colors), 2)
+        device_combinations <- utils::combn(names(device_colors), 2)
         plotlist <- list()
 
         for (combination_i in seq_len(ncol(device_combinations))) {
