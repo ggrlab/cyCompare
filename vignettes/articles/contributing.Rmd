@@ -1,0 +1,81 @@
+---
+title: "Contributing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Contributing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+# Workflow
+If you want to contribute to the `cyCompare` package, please follow these steps. 
+I usually work on the package by immediately creating a new `tests/testthat/test-xxx.R`, 
+put `devtools::load_all()` at the top of the file, and a `browser()` statement within the 
+test function. 
+Then I run the test file in the R console, which will load the package and stop at the `browser()` statement, e.g.: 
+
+```r
+usethis::use_test("test-xxx")
+# put browser() at the top of the test function
+# devtools::load_all() -->  Should allow you to interactively code while all functions are loaded. 
+```
+
+After you are done with the functionality, the following commands are necessary to properly prepare
+the package for a pull request. 
+```r
+devtools::document()        # Document the package, i.e. update the Rd files and the NAMESPACE
+devtools::test()            # Run tests
+devtools::check()           # Check package
+devtools::install()         # Install package
+pkgdown::clean_site(force=TRUE)       # Build pkgdown site
+pkgdown::build_site()       # Build pkgdown site
+devtools::build_readme()
+
+devtools::spell_check()     # Check spelling in documentation. Allowed wordlist is in inst/WORDLIST
+urlchecker::url_check()     # Check URLs in documentation
+```
+
+After doing these steps, you can push your changes to Github.
+
+# Releasing to CRAN
+
+Whenever a package maintainer wants to release a new version of the package to CRAN, they should:
+
+1. Check whether the [release requirements](https://r-pkgs.org/release.html#sec-release-initial) are fulfilled
+2. Use the following commands to do a final check of the package and release it to CRAN
+
+```R
+# Check spelling and URLs. False positive findings of spell check should be
+# added to inst/WORDLIST.
+devtools::spell_check()
+urlchecker::url_check()
+
+# Slower, but more realistic tests than devtools::check()
+rcmdcheck::rcmdcheck(
+  args = c("--no-manual", "--as-cran"),
+  build_args = ("--no-manual"),
+  error_on = ("warning"),
+  check_dir = "../cyCompare-RCMDcheck"
+)
+devtools::check(
+  remote = TRUE,
+  manual = TRUE,
+  run_dont_test = TRUE
+)
+
+# Check reverse dependencies. For details see:
+# https://r-pkgs.org/release.html#sec-release-revdep-checks
+revdepcheck::revdep_check(num_workers = 8)
+
+# Send your package to CRAN's builder services. You should receive an e-mail
+# within about 30 minutes with a link to the check results. Checking with
+# check_win_devel is required by CRAN policy and will (also) be done as part
+# of CRAN's incoming checks.
+devtools::check_win_oldrelease()
+devtools::check_win_release()
+devtools::check_win_devel()
+devtools::check_mac_release()
+
+# Use the following command to submit the package to CRAN of submit via the web
+# interface available at https://cran.r-project.org/submit.html.
+devtools::submit_cran()
+```
