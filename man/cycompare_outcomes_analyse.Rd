@@ -31,7 +31,11 @@ cycompare_outcomes_analyse(
     "test"), max.depth = paradox::to_tune(2, 20), num.trees = paradox::to_tune(c(500,
     1000, 1500, 2000)), importance = "impurity")), loss_measure =
     mlr3::msr("classif.logloss")),
-  dv_class_positive = c(outcome_1 = "A", outcome_2 = 5.1)
+  model_counts_proportions = c("counts", "proportions"),
+  model_which_elements = c("metaCluster"),
+  dv_class_positive = c(outcome_1 = "A", outcome_2 = 5.1),
+  prepared_saveload = FALSE,
+  postgate_sample_seed = 42
 )
 }
 \arguments{

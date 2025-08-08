@@ -36,6 +36,20 @@ allowing full control over the distance calculation.
 }
 }
 }
+\examples{
+mat1 <- matrix(rnorm(50), ncol = 10)
+mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+lossfun_hist_cytonorm(mat1, mat2)
+# Usually you would not use this function directly, but rather
+# use lossfun_hist() which calls this internally.
+lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_cytonorm)
+mat1 <- matrix(rnorm(50), ncol = 10)
+mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+lossfun_hist_weighted(mat1, mat2)
+# Usually you would not use this function directly, but rather
+# use lossfun_hist() which calls this internally.
+lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted)
+}
 \seealso{
 \code{\link[emdist]{emd2d}}, \code{\link{lossfun_hist}}
 }

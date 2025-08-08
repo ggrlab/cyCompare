@@ -17,7 +17,6 @@ Expected to contain the elements:
 \item \code{"cells_clusters_from_train"}: List of predicted clusters per cell.
 \item \code{"ncells_per_x"}: Named list of data.tables with cluster cell counts per sample.
 \item \code{"proportions_per_x"}: Named list of data.tables with normalized cluster proportions.
-\item \code{"pheno"}: A data.table with sample-level metadata.
 }}
 
 \item{dir_out}{A character string specifying the directory to which files should be saved.

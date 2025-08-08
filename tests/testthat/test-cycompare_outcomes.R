@@ -49,14 +49,14 @@ test_that("CyCompare, outcomes", {
 
     qs::qsave(result_analysis, file.path(tempdir2, "result_analysis.qs"))
     result_analysis <- qs::qread(file.path(tempdir2, "result_analysis.qs"))
-    cycompare_outcomes_plot(
+    plotted_results <- cycompare_outcomes_plot(
         df = prepdata$df,
         dfcol_grouping_supersamples = c("Study"),
         dfcol_grouping_samples = "Device",
         dfcol_outcomes = c("outcome_1", "outcome_2"),
         results_cycompare_analyse = result_analysis
     )
-    pdf("removeme.pdf", width = 20)
-    print(tmp)
+    pdf(file.path(tempdir2, "removeme.pdf"), width = 20)
+    print(plotted_results)
     dev.off()
 })

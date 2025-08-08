@@ -11,6 +11,7 @@ models_grouped_apply(
   grouping,
   dfcol_train_validation_other,
   dfcol_outcomes,
+  counts_proportions = "proportions_per_x",
   bygroup = FALSE,
   ...
 )

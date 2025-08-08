@@ -12,6 +12,8 @@ models_grouped(
   dfcol_train_validation_other,
   dfcol_outcomes,
   hparam_n_evaluations = 3,
+  counts_proportions = "proportions_per_x",
+  which_elements = c("metaCluster"),
   seed = 42,
   learners_classification = list(mlr3::lrn("classif.ranger", predict_type = "prob",
     predict_sets = c("train", "test"), max.depth = paradox::to_tune(2, 20), num.trees =
@@ -28,7 +30,12 @@ and a unique \code{File} column linking to \code{names(flowframes)}..}
 \item{outdir}{A character string specifying the output directory for model results.}
 
 \item{result_grouping}{A list containing precomputed grouping results (e.g., from FlowSOM clustering),
-typically the \code{applied} result from \code{fun_grouped_apply()}. Must include \code{"proportions_per_x"} slot.}
+typically the \code{applied} result from \code{fun_grouped_apply()}.
+Each element is merged with \code{df} based on the grouping variables and the list
+is then given to \code{cytobench::wrapper_count_models}.
+\code{cytobench::wrapper_count_models()} then trains models for each element and
+returns a SINGLE model based on ONE of the elements - the one performing best on
+the validation set.}
 
 \item{grouping}{A data frame that defines grouping variables for merging with \code{df}.}
 
@@ -37,6 +44,11 @@ typically the \code{applied} result from \code{fun_grouped_apply()}. Must includ
 \item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
 \item{hparam_n_evaluations}{Integer; number of hyperparameter evaluations during model tuning. Default is 3.}
+
+\item{counts_proportions}{Character; either "counts" or "proportions". Determines whether to use raw counts or proportions for clustering.}
+
+\item{which_elements}{Character vector; specifies which elements of the clustering results to use.
+Defaults to \code{c("metaCluster")}, could usually be "cluster".}
 
 \item{seed}{Integer; random seed for reproducibility. Default is 42.}
 
