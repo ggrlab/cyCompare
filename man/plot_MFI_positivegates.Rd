@@ -13,20 +13,35 @@ plot_MFI_positivegates(
 )
 }
 \arguments{
-\item{dt_count_mfi}{A \code{data.table} containing MFI values with columns: \code{File}, \code{pop}, \code{MFI}, \code{Time}, and \code{Device}.}
+\item{dt_count_mfi}{A \code{data.table} containing per-population MFI values with the following columns:
+\describe{
+\item{File}{Identifier of the FCS file}
+\item{pop}{Population name (e.g., "CD4+ T cells")}
+\item{MFI}{Median fluorescence intensity for the population}
+\item{Time}{Time point or acquisition date}
+\item{Device}{Identifier of the instrument used}
+}}
 
-\item{marker_to_gate}{A named list mapping markers to their respective gating populations.}
+\item{marker_to_gate}{A named list mapping markers to one or more population names used to compute MFIs.
+For example: \code{list("CD4" = c("CD4 T", "CD4 Memory T"))}.}
 
-\item{device_colors}{A named vector specifying custom colors for devices (e.g., \code{c("Device1" = "red", "Device2" = "blue")}).}
+\item{device_colors}{An optional named character vector mapping device names to colors,
+e.g., \code{c("Cytometer1" = "steelblue", "Cytometer2" = "firebrick")}.}
 
-\item{transformlist}{An optional named list of transformation functions for each marker (e.g., \code{list("CD3" = log10, "CD4" = sqrt)}). If a single value or function is provided, it will be applied to all markers.}
+\item{transformlist}{An optional named list of transformation functions for each marker,
+e.g., \code{list("CD3" = log10, "CD4" = sqrt)}. If a single function or list is given,
+it is applied uniformly to all markers.}
 
-\item{meanratio}{A logical indicating whether to plot the ratio of MFI to the mean MFI for each marker or the transformed MFI values (default: \code{FALSE}).}
+\item{meanratio}{Logical. If \code{TRUE}, plots the ratio of each MFI value to the mean MFI
+of its marker across all samples (useful for comparing relative changes). If \code{FALSE},
+plots the raw (possibly transformed) MFI values. Default is \code{FALSE}.}
 }
 \value{
-A \code{ggplot2} object visualizing the transformed MFI over time for each marker.
+A \code{ggplot2} object with one facet per marker showing MFI or MFI ratios over time.
+Devices are distinguished by color or fill. A LOESS smoothing curve is included to highlight trends.
 }
 \description{
-This function plots the transformed median fluorescence intensity (MFI) for positive gates
-over time, grouped by device. It allows for custom transformations and device color mappings.
+This function plots the transformed median fluorescence intensity (MFI) values over time
+for specific positive gates, grouped by device and faceted by marker. It supports optional
+transformation functions, log-ratio normalization, and device-specific coloring.
 }

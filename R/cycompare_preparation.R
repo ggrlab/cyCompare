@@ -1,24 +1,25 @@
 #' Prepare Gated FlowFrames and Metadata for Cross-Device Comparison
 #'
-#' This function applies a primary gating step to flow cytometry data,
-#' assigns colors to devices, and prepares both gated events and metadata
-#' for downstream analyses such as visualization or normalization.
+#' Applies a primary gating step to flow cytometry samples, assigns colors to devices,
+#' and returns gated data and metadata for downstream clustering, modeling, or plotting.
 #'
-#' @param flowframes A named list of `flowFrame` objects. Names must match sample identifiers in `df`.
-#' @param df A data.frame containing metadata for each sample, including a "Device" column.
-#' @param ff_columns_relevant A character vector of column names to retain after gating (e.g., marker channels).
-#' @param device_colors Either a named character vector mapping device names to colors, or a function `f(n)` returning `n` colors.
-#'                      Defaults to using `RColorBrewer::brewer.pal(n, "Dark2")`.
-#' @param gatingsets A named list of `GatingSet` objects used for gating, one per sample.
-#' @param gatename_primary The name of the primary gate used to subset events (e.g., "Live").
-#' @param n_events_postgate Exact number of events to retain per sample after gating. Might upsample cells. Default is 10,000. See `cytoBench::subsample_ff`.
-#' @param seed Random seed for reproducibility when downsampling. Default is 42.
+#' @inheritParams cycompare_outcomes_analyse
+#' @param seed Integer.
+#' Random seed for reproducibility during subsampling. Default is 42.
+#' @param marker_to_gate
+#' Named vector mapping markers to their associated gate name.
+#' Later used for plotting.
+#' @param transformlist
+#' A named list or function defining transformations for `ff_columns_relevant`.
+#' All markers listed must be present. If provided as a function or unnamed list, it is recycled.
 #'
-#' @return A list with the following elements:
+#' @return A named list with the following elements:
 #' \describe{
-#'   \item{gated_ff}{A list of gated and downsampled `flowFrame` objects, keeping only relevant columns.}
-#'   \item{counts_joint}{A data.table with per-sample gated cell counts merged with metadata.}
-#'   \item{device_colors}{Named vector of device colors used, auto-assigned if a function was provided.}
+#'   \item{gated_ff}{Named list of gated and downsampled `flowFrame`s, reduced to `ff_columns_relevant`.}
+#'   \item{counts_joint}{Merged `data.table` combining per-sample cell counts (from gating) and metadata (`df`).}
+#'   \item{device_colors}{Named vector of device color assignments. Auto-generated if not provided explicitly.}
+#'   \item{marker_to_gate}{The (possibly adjusted) mapping from markers to gates used during validation.}
+#'   \item{gatename_primary}{Name of the gate used to subset events (typically `"Live"` or `"CD3+"`).}
 #' }
 #'
 #' @export
@@ -38,24 +39,29 @@ cycompare_preparation <- function(
     dfcol_grouping_samples = "Device",
     dfcol_train_validation_other = NULL,
     transformlist = NULL) {
-    mandatory_df_cols <- c("File", "SuperSample", "Sample", dfcol_grouping_samples[[1]], dfcol_train_validation_other, dfcol_grouping_supersamples, "Time")
+    pop <- NULL # R CMD check compatibility
+    # --- 1. Check required columns in metadata ---
+    mandatory_df_cols <- c(
+        "File", "SuperSample", "Sample", dfcol_grouping_samples[[1]],
+        dfcol_train_validation_other, dfcol_grouping_supersamples, "Time"
+    )
     if (!all(mandatory_df_cols %in% colnames(df))) {
-        tmp <- paste0(
-            "df must contain the following columns: ",
-            paste(mandatory_df_cols, collapse = ", "), ". Missing:",
-            paste(mandatory_df_cols[!mandatory_df_cols %in% colnames(df)], collapse = ", ")
+        stop(
+            "Missing required columns in `df`: ",
+            paste(setdiff(mandatory_df_cols, colnames(df)), collapse = ", ")
         )
-        stop(tmp)
     }
+
+    # Warn if multiple grouping columns for samples are provided
     if (length(dfcol_grouping_samples) > 1) {
         warning(
-            "dfcol_grouping_samples is more than one element, colors will be assigned according to the FIRST element only: ",
+            "Only the first sample grouping column is used for device color assignment: ",
             dfcol_grouping_samples[1]
         )
     }
-    # Identify all unique devices in metadata
-    unique_devices <- unique(df[[dfcol_grouping_samples[[1]]]])
 
+    # --- 2. Identify all unique devices in metadata ---
+    unique_devices <- unique(df[[dfcol_grouping_samples[[1]]]])
     if (all(is.null(names(flowframes)))) {
         stop("flowframes must be a named list")
     }
@@ -64,135 +70,124 @@ cycompare_preparation <- function(
     if (!all(unique_devices %in% names(device_colors))) {
         if (is.function(device_colors)) {
             # Auto-assign colors (ensure at least 3 colors for RColorBrewer)
-            device_colors <- setNames(
+            device_colors <- stats::setNames(
                 device_colors(length(unique_devices))[seq_along(unique_devices)],
                 unique_devices
             )
             warning(
-                "The following device colors were automatically assigned:",
-                paste0(
-                    names(device_colors),
-                    " = ",
-                    device_colors,
-                    collapse = ", "
-                )
+                "Device colors were auto-assigned:\n",
+                paste(names(device_colors), device_colors, sep = " = ", collapse = ", ")
             )
         } else {
-            stop("device_colors must be a named vector or a function(number_of_devices)")
+            stop("`device_colors` must be a named vector or a function(number_of_devices)")
         }
     }
+
+    # --- 3. Set up fallback gating if none is provided ---
     if (all(is.null(gatingsets))) {
         gatingsets <- sapply(
             names(flowframes),
             simplify = FALSE,
             function(x) {
-                tmpfile <- cytobench::write_memory_FCS(
-                    flowframes[[x]][1, ]
-                )
-
                 empty_gs <- flowWorkspace::GatingSet(flowCore::flowSet(flowframes[[x]][1, ]))
                 return(empty_gs)
             }
         )
         gatename_primary <- "root"
         if (!all(is.null(marker_to_gate))) {
-            # Now now gates exist, so marker_to_gate can only be "root" for all markers
+            # Now that gates exist, so marker_to_gate can only be "root" for all markers
             marker_to_gate[TRUE] <- "root"
         }
     }
 
-    marker_to_gate_check(
-        marker_to_gate = marker_to_gate,
-        gatingsets = gatingsets
-    )
-
-    missing_markernames <- setdiff(
-        names(marker_to_gate),
-        flowCore::colnames(flowframes[[1]])
-    )
-    if (length(missing_markernames) > 0) {
+    # --- 4. Validate marker-to-gate mapping ---
+    marker_to_gate_check(marker_to_gate, gatingsets)
+    missing_markers <- setdiff(names(marker_to_gate), flowCore::colnames(flowframes[[1]]))
+    if (length(missing_markers) > 0) {
         stop(
-            "Not all markers in marker_to_gate are present in flowframes.",
+            "Markers in `marker_to_gate` missing from flowframes. ",
             "Please use the colnames, not markernames.\nMissing: ",
-            paste0(missing_markernames, collapse = ", "),
+            paste(missing_markers, collapse = ", "),
             "\nPresent: ",
             paste0(flowCore::colnames(flowframes[[1]]), collapse = ", ")
         )
     }
 
+    # --- 5. Apply gating ---
     # Apply the primary gate to each sample using cytobench::gate_cells
     gated_ff <- sapply(
         names(flowframes),
         simplify = FALSE,
         function(x) {
-            tmp <- cytobench::gate_cells(
+            gated <- cytobench::gate_cells(
                 flowset = flowCore::flowSet(flowframes[[x]]),
                 gatingset = gatingsets[[x]],
                 gatename = gatename_primary,
                 verbose = FALSE
             )
-            tmp[["counts"]][["sample"]] <- x
-            # markernames to colnames in gated_ff
-            # Such that transformlist later works by COLUMN name
-            names_dict <- setNames(
-                names(flowCore::markernames(tmp[["flowset_gated"]])),
-                flowCore::markernames(tmp[["flowset_gated"]])
+            # Track which sample was processed
+            gated[["counts"]][["sample"]] <- x
+
+            # Use colnames instead of markernames in count table (ensures transformation works)
+            name_map <- stats::setNames(
+                names(flowCore::markernames(gated[["flowset_gated"]])),
+                flowCore::markernames(gated[["flowset_gated"]])
             )
-            colnames(tmp[["counts"]])[colnames(tmp[["counts"]]) %in% names(names_dict)] <- na.omit(names_dict[colnames(tmp[["counts"]])])
-            tmp
+
+            colnames(gated[["counts"]])[colnames(gated[["counts"]]) %in% names(name_map)] <- stats::na.omit(
+                name_map[colnames(gated[["counts"]])]
+            )
+            return(gated)
         }
     )
 
-    # Collect and join cell counts with metadata
+    # --- 6. Merge gating counts with metadata ---
     counts_ff <- lapply(gated_ff, function(x) x[["counts"]]) |> data.table::rbindlist(fill = TRUE)
     data.table::setnames(counts_ff, "sample", "File")
     if (!all(df[["File"]] %in% counts_ff[["File"]])) {
-        stop("Not all files in df are present in counts_ff based on 'File' column.")
+        stop("Mismatch between `df$File` and gated counts")
     }
     counts_joint <- data.table::data.table(df)[counts_ff, on = "File"]
 
-    # Sanity check: ensure gate captures sufficient events
-    if (quantile(counts_joint[pop == gatename_primary][["count"]], .9) < 100) {
-        stop(
-            "The primary gate has less than 100 cells in the 90th percentile of samples. ",
-            "Did you select the right gate for these samples?"
-        )
+    # Sanity check: were any gates nearly empty?
+    if (stats::quantile(counts_joint[pop == gatename_primary][["count"]], 0.9) < 100) {
+        stop("Primary gate yields <100 events in 90th percentile - check `gatename_primary`.")
     }
 
-    # Extract gated flowFrames
+    # --- 7. Extract gated flowFrames ---
     gated_ff <- lapply(gated_ff, function(x) x[["flowset_gated"]][[1]])
 
-    # Downsample and select only relevant columns
-    gated_ff <- lapply(gated_ff,
-        cytobench::subsample_ff,
-        n_cells = n_events_postgate,
-        seed = seed
+    # --- 8. Downsample and subset markers ---
+    gated_ff <- lapply(gated_ff, cytobench::subsample_ff,
+        n_cells = n_events_postgate, seed = seed
     )
+    # Retain only relevant marker columns
     gated_ff <- lapply(gated_ff, function(x) x[, ff_columns_relevant])
 
-
-    if (length(transformlist) == 1 && !is.null(transformlist)) {
-        if (is.function(transformlist)) {
-            transformlist <- list(transformlist)
-        }
-        transformlist <- setNames(
-            rep(transformlist, length(ff_columns_relevant)),
-            ff_columns_relevant
+    # --- 9. process transformlist if given ---
+    # transformlist_named() is going to be called where needed again!
+    # This here is just for testing if the transformlist is valid
+    transformlist_list <- transformlist_named(
+        transformlist,
+        relevant_columns = ff_columns_relevant,
+        flowcore = FALSE
+    )
+    # Ensure every marker has a transform
+    if (!all(ff_columns_relevant %in% names(transformlist_list))) {
+        stop(
+            "All `ff_columns_relevant` must be covered by `transformlist`. Missing: ",
+            paste(setdiff(ff_columns_relevant, names(transformlist_list)), collapse = ", ")
         )
     }
 
-    if (!all(ff_columns_relevant %in% names(transformlist))) {
-        stop("All ff_columns_relevant must be present in transformlist")
-    }
-
-    # Return result
+    # --- 10. Return prepared object ---
     return(
         list(
-            gated_ff = gated_ff,
-            counts_joint = counts_joint,
-            device_colors = device_colors,
-            marker_to_gate = marker_to_gate,
-            gatename_primary = gatename_primary
+            gated_ff = gated_ff, # List of gated, downsampled, transformed flowFrames
+            counts_joint = counts_joint, # Combined metadata and per-sample gating statistics
+            device_colors = device_colors, # Named vector of colors per device
+            marker_to_gate = marker_to_gate, # Final validated marker-to-gate mapping
+            gatename_primary = gatename_primary # The primary gating population used
         )
     )
 }

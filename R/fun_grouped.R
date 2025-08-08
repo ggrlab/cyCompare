@@ -1,32 +1,38 @@
 #' Apply a Function to Grouped Flow Cytometry Data
 #'
-#' This function applies a specified analysis function (e.g., FlowSOM training)
-#' to subsets of flow cytometry data defined by unique combinations of df columns.
-#' Each grouping results in a separate function call, which can be useful
-#' for training models per sample, supersample, or condition.
+#' Applies a user-specified function to grouped subsets of flow cytometry data.
+#' Groupings are defined by combinations of metadata columns in `df`, such as study or device.
+#' Each group's subset is passed to `fun()` (e.g., FlowSOM training) independently,
+#' allowing per-device or per-supersample processing.
 #'
+#' @inheritParams cycompare_outcomes_analyse
 #' @param data
-#' The data which should be subset. E.g.
-#'  - A named list of flowFrames, indexed by the "File" column of df.
-#' @param make_flowset Logical; if TRUE, convert subset to a flowSet before applying the function.
-#' @param fun Function to apply on each group. Default: `flowsom_repeatsubsampling`.
-#' The function should accept a flowSet and an output directory as first two arguments.
-#' @param df Data frame containing all following `dfcol_XXX` and `File` column.
-#' @param dfcol_grouping_supersamples Character; column name(s) for supersample grouping.
-#' @param dfcol_grouping_samples Character; column name(s) for sample grouping.
-#' @param dfcol_train_validation_other Character; column name to distinguish training/validation/other.
-#' @param dfcol_othergroups Character vector (optional); other metadata columns for grouping.
-#' @param outdir_base Character (optional); base directory for writing outputs. The output directory for each group will be
-#' created by combining `outdir_base` with the grouping names. E.g.
-#' `outdir_base/columnA.valueA___columnB.valueB`.
-#' @param verbose Logical; print progress messages.
-#' @param ... Additional arguments passed to `fun`.
+#' The data which should be subset.
+#' A named list of flowFrames (or similar), with names matching entries in `df$File`.
 #'
-#' @return A list with two elements:
+#' @param make_flowset Logical; if `TRUE`, convert the subset to a `flowSet` before calling `fun`.
+#' @param fun
+#' Function to apply to each group. It must accept a subset of the data and an `outdir` as its first two arguments.
+#' @param dfcol_othergroups
+#' Optional character vector of additional grouping columns.
+#' @param outdir_base
+#' Optional character path; used as the root directory for saving results.
+#' Each group will have a subdirectory named like `columnA.valueA___columnB.valueB/`.
+#' @param verbose Logical; print progress messages (default: `FALSE`).
+#' @param return_results
+#' Logical; whether to return the result of `fun()` for each group. If `FALSE`,
+#' assumes `fun()` is expected to save results to disk into `outdir_base`.
+#' @param subset_fun
+#' Function to extract a subset from `data` given a vector of `File` names. Defaults to indexing `data[files]`.
+#' @param ... Additional arguments passed to `fun`.
+
+#'
+#' @return A named list with:
 #' \describe{
-#'   \item{results}{List of outputs returned by `fun` for each group.}
-#'   \item{groups}{Data frame of the grouping combinations used.}
+#'   \item{results}{List of outputs from `fun()` per group (or `NULL` if `return_results = FALSE`).}
+#'   \item{groups}{Data frame containing one row per grouping combination used.}
 #' }
+#'
 #' @export
 fun_grouped <- function(
     data,
@@ -45,9 +51,10 @@ fun_grouped <- function(
     },
     ...) {
     if (!return_results && is.null(outdir_base)) {
-        stop("If return_results is FALSE, outdir_base must be specified and the function should save the results there.")
+        stop("If return_results is FALSE, you must specify outdir_base to write results.")
     }
-    # Get all unique combinations of the specified grouping columns
+
+    # --- 1. Define all unique group combinations ---
     possible_groupings <- df |>
         dplyr::select(
             dfcol_grouping_supersamples,
@@ -57,7 +64,7 @@ fun_grouped <- function(
         ) |>
         dplyr::distinct()
 
-    # Iterate through each group and apply the analysis function
+    # --- 2. Iterate through each group and apply the analysis function ---
     all_results <- future.apply::future_lapply(
         seq_len(nrow(possible_groupings)),
         future.seed = TRUE,
@@ -73,7 +80,7 @@ fun_grouped <- function(
                 )
             }
 
-            # Subset metadata to only include rows matching this grouping
+            # Subset metadata to this group's rows
             df_subset <- dplyr::left_join(
                 grouping_x,
                 df,
@@ -85,7 +92,12 @@ fun_grouped <- function(
                 )
             )
 
-            # Create output directory for this grouping, if specified
+            # Stop if no rows found
+            if (nrow(df_subset) == 0) {
+                stop("No data for this grouping")
+            }
+
+            # --- 3. Define group output path (optional) ---
             if (!is.null(outdir_base)) {
                 current_outdir <- file.path(
                     outdir_base,
@@ -93,35 +105,30 @@ fun_grouped <- function(
                 )
             }
 
-            # Stop if no matching rows found
-            if (nrow(df_subset) == 0) {
-                stop("No data for this grouping")
-            }
-
-            # Extract flowFrames by file names
+            # --- 4. Subset the data based on df_subset[["File"]] ---
             data_subset <- subset_fun(data, df_subset[["File"]])
 
-            # Optionally convert to a flowSet
+            # Convert to flowSet if requested
             if (make_flowset) {
                 data_subset <- flowCore::flowSet(data_subset)
             }
 
-            # Sanity check: make sure the number of files matches
+            # --- 5. Sanity check on subset size ---
             if (length(data_subset) != nrow(df_subset)) {
                 stop(
-                    "Some files are missing from the data_subset set. ",
-                    "I wanted to load ", nrow(df_subset),
-                    " files, but only found ", length(data_subset),
-                    ". Files are loaded by their names ('File' column in df)."
+                    "Mismatch: expected ", nrow(df_subset), " files but found ",
+                    length(data_subset), " in subset."
                 )
             }
 
-            # Apply the user-specified function
+            # --- 6. Apply the user-defined function ---
             res <- fun(
                 data_subset,
                 outdir = current_outdir,
                 ...
             )
+
+            # Discard result if not requested (e.g., result was saved to disk)
             if (!return_results) {
                 # if return_results is FALSE, set res to NULL
                 # to avoid returning the results of the function
@@ -129,11 +136,12 @@ fun_grouped <- function(
                 # SAVED within the function!
                 res <- NULL
             }
+
             return(res)
         }
     )
 
-    # Return results and grouping combinations
+    # --- 7. Return all results with corresponding group metadata ---
     return(
         list(
             "results" = all_results,

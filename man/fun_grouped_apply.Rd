@@ -16,35 +16,32 @@ fun_grouped_apply(
 )
 }
 \arguments{
-\item{data}{The data which should be subset. E.g.
-\itemize{
-\item A named list of flowFrames, indexed by the "File" column of df.
-}}
+\item{data}{Named list of flowFrames or similar objects. Names must match \code{File} column from metadata.}
 
-\item{result_grouping}{A list returned from \code{fun_grouped()} that contains \code{groups} and optionally \code{results}.}
+\item{result_grouping}{A list returned from \code{fun_grouped()}, containing \code{groups} and optionally \code{results}.
+Can also be a list of such lists (e.g., clustering + modeling).}
 
-\item{make_flowset}{Logical; if TRUE, convert \code{ff_list} into a \code{flowSet}. Default is TRUE.}
+\item{make_flowset}{Logical; if \code{TRUE}, convert the subset to a \code{flowSet} before calling \code{fun}.}
 
-\item{fun}{A function to apply to each group. It should accept at least arguments \code{ff_list}, \code{outdir}, and a grouping-specific input (e.g., \code{result_grouping[["results"]][[i]]}).}
+\item{fun}{Function to apply to each group. It must accept a subset of the data and an \code{outdir} as its first two arguments.}
 
-\item{outdir_base}{Optional string path to save results. Required if \code{return_results} is FALSE.}
+\item{outdir_base}{Base directory for saving intermediate results (default: \code{tempdir()}).}
 
-\item{verbose}{Logical; if TRUE, prints progress messages.}
+\item{verbose}{Logical; print progress messages (default: \code{FALSE}).}
 
-\item{return_results}{Logical; if FALSE, the function does not return results and assumes side effects (e.g., saving to disk).}
+\item{return_results}{Logical; whether to return the result of \code{fun()} for each group. If \code{FALSE},
+assumes \code{fun()} is expected to save results to disk into \code{outdir_base}.}
 
 \item{...}{Additional arguments passed to \code{fun}.}
 }
 \value{
-A list containing:
+A named list with:
 \describe{
-\item{results}{List of results for each grouping, or NULL if \code{return_results} is FALSE.}
-\item{groups}{Data frame of group combinations processed.}
+\item{results}{List of outputs from \code{fun()} per group (or \code{NULL} if \code{return_results = FALSE}).}
+\item{groups}{Data frame of group combinations used.}
 }
 }
 \description{
-This function applies a user-defined function (e.g., FlowSOM training) to data
-across multiple groupings, typically the result of \code{fun_grouped()}. It allows optional conversion
-to a \code{flowSet}, supports parallel execution, and can either return the results or rely on
-side effects such as file output.
+Applies a user-defined function (e.g., FlowSOM application or modeling) to each group from \code{fun_grouped()} output.
+This supports grouped application of downstream tasks across supersample/device combinations.
 }

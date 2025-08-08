@@ -9,38 +9,58 @@ models_grouped_apply(
   outdir,
   result_grouping,
   grouping,
-  result_grouping_models,
   dfcol_train_validation_other,
   dfcol_outcomes,
+  counts_proportions = "proportions_per_x",
   bygroup = FALSE,
   ...
 )
 }
 \arguments{
-\item{df}{A data frame containing feature columns used for classification.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
 \item{outdir}{A character string specifying the output directory to save model results. Not used here.}
 
-\item{result_grouping}{A list object containing grouping results, including phenotype proportions.}
+\item{result_grouping}{A list returned from the grouping pipeline. Must include \code{clustering} (with proportions) and
+\code{models} (trained model list).}
 
-\item{grouping}{A data frame that defines grouping variables for merging with \code{df}.}
+\item{grouping}{A \code{data.frame} with one row per sample,  that defines grouping variables for merging with \code{df}.}
 
-\item{result_grouping_models}{A list of models to be applied to the data.}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{dfcol_train_validation_other}{Character vector of column names indicating data split (e.g., train/validation/test).}
+\item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
-\item{dfcol_outcomes}{Character vector of outcome column names to be modeled.}
+\item{counts_proportions}{A character string indicating the type of clustering proportions to use
+(e.g., "proportions_per_x"). This should match the names in \code{result_grouping[["clustering"]]}.
+This is used to retrieve the clustering proportions for each sample.
+Default is "proportions_per_x".
+This should match the names in \code{result_grouping[["clustering"]]}.}
 
 \item{bygroup}{Logical;
-If FALSE, the function will apply each model to the entire dataset (result_grouping[\link{"clustering"}][\link{"proportions_per_x"}][\link{"metaCluster"}]).
+If FALSE, the function will apply each model to the entire dataset
+(\code{result_grouping[["clustering"]][[counts_proportions]][[finalmodel_cluster_selection]]}).
 If TRUE, the \code{FALSE} dataset is limited to the rows mathing the \code{grouping} variable.}
 
 \item{...}{Not used.}
 }
 \value{
-A list of trained models and evaluation results.
+A \code{data.table} in long format with predictions for each sample, outcome, model, and clustering:
+\describe{
+\item{outcome_}{The modeled outcome.}
+\item{model_}{The model variant name.}
+\item{clustering_}{The FlowSOM clustering ID used.}
+\item{prediction_name}{The name of the predicted class/label.}
+\item{prediction_value}{The predicted probability or score.}
+\item{threshold_proc_validationset}{The classification threshold used.}
+}
 }
 \description{
-This function applies classification models to flow cytometry data grouped by metadata.
-It handles preprocessing, joins with grouping information, and fits models using \code{cytobench::wrapper_count_models}.
+This function applies models to grouped flow cytometry data.
+It merges phenotype proportions (from FlowSOM clustering) with metadata and applies
+pre-trained models (from \code{cytobench::wrapper_count_models}) to predict outcome variables.
+}
+\details{
+Grouping is controlled by metadata columns. If \code{bygroup = TRUE}, the classification is
+restricted to the subset defined by \code{grouping}; otherwise, all samples are used.
 }

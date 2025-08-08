@@ -5,12 +5,16 @@
 \alias{lossfun_hist_weighted}
 \title{Wrapper Functions for Histogram-Based Loss Calculation}
 \usage{
-lossfun_hist_cytonorm(x, y, ...)
+lossfun_hist_cytonorm(mat1, mat2, ...)
 
-lossfun_hist_weighted(x, y, ...)
+lossfun_hist_weighted(mat1, mat2, ...)
 }
 \arguments{
-\item{...}{Additional arguments passed to \code{emd_fun}.}
+\item{mat1}{A numeric matrix. Each column represents a variable (e.g., marker) and rows are observations (e.g., cells).}
+
+\item{mat2}{A second numeric matrix, same shape and interpretation as \code{mat1}.}
+
+\item{...}{Additional arguments passed to \code{lossfun}.}
 }
 \value{
 A numeric value representing the loss (EMD) between the input matrices.
@@ -35,6 +39,20 @@ A generic weighted EMD computation that retains all arguments, including \code{y
 allowing full control over the distance calculation.
 }
 }
+}
+\examples{
+mat1 <- matrix(rnorm(50), ncol = 10)
+mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+lossfun_hist_cytonorm(mat1, mat2)
+# Usually you would not use this function directly, but rather
+# use lossfun_hist() which calls this internally.
+lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_cytonorm)
+mat1 <- matrix(rnorm(50), ncol = 10)
+mat2 <- matrix(rnorm(50, mean = 1), ncol = 10)
+lossfun_hist_weighted(mat1, mat2)
+# Usually you would not use this function directly, but rather
+# use lossfun_hist() which calls this internally.
+lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted)
 }
 \seealso{
 \code{\link[emdist]{emd2d}}, \code{\link{lossfun_hist}}

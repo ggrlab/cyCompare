@@ -12,6 +12,7 @@ test_that("Test plotting", {
         dfcol_grouping_supersamples = c("batch"),
         dfcol_outcomes = c("outcome1", "outcome2")
     )
+    print(plots)
     # "device" would usually be a SAMPLE grouping variable, not a SUPERSAMPLE
     # but here its just for testing
     plots <- plot_outcome_circles(

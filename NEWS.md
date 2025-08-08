@@ -1,3 +1,3 @@
-# cyCompare (development version)
+# cyCompare 0.0.1.007
 
-* Initial CRAN submission.
+* Development

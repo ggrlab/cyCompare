@@ -42,6 +42,18 @@
 #' - `function(i, j) i == 1 || j == 1` to skip the first row and column
 #'
 #' @param take_time Logical; if `TRUE`, take timing information.
+#' @param return_as_matrix Logical; if `TRUE`, returns a matrix of distances.
+#'   If `FALSE`, returns a `data.table` with columns `sample_A_i`, `sample_B_j`, `dist`, `time`, `sample_A`, `sample_B`.
+#' @param intermediate_file
+#'  A character string specifying the file to write intermediate results to.
+#'  Default is "distances_intermediate.csv".
+#'  If `write_intermediate = TRUE`, this file will be created or overwritten.
+#'  If `write_intermediate = FALSE`, this parameter is ignored.
+#'  If the file exists, it will be overwritten.
+#'  If the file does not exist, it will be created.
+#'  If `write_intermediate = TRUE`, the file will be written in append mode
+#'  (i.e., new results will be added to the end of the file).
+#'  If `write_intermediate = FALSE`, the file will not be written.
 #' @param ... Additional arguments passed to the `loss` function.
 #'
 #' @return Invisibly returns `NULL`. Results are written to `distances_intermediate.csv` if `write_intermediate = TRUE`.
@@ -66,10 +78,12 @@ loss_pairwise <- function(datalist_A,
                           loss = lossfun_hist,
                           verbose = FALSE,
                           write_intermediate = FALSE,
+                          intermediate_file = "distances_intermediate.csv",
                           should_skip = function(i, j) i >= j,
                           take_time = FALSE,
                           return_as_matrix = TRUE,
                           ...) {
+    sample_A_i <- sample_B_j <- NULL # R CMD check compatibility
     ### 1. Checks
     # 1.1. Check if both datalists are actually lists
     if (!is.list(datalist_A) || !is.list(datalist_B)) {
@@ -106,7 +120,6 @@ loss_pairwise <- function(datalist_A,
 
 
     ### 3. Compute the distances
-    intermediate_file <- "distances_intermediate.csv"
     dt_res <- data.table::data.table(
         "sample_A_i" = NA_integer_,
         "sample_B_j" = NA_integer_,

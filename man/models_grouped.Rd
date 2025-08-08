@@ -2,7 +2,7 @@
 % Please edit documentation in R/models_grouped.R
 \name{models_grouped}
 \alias{models_grouped}
-\title{Train Grouped Models Using a Classification Pipeline}
+\title{Train Grouped Classification Models Using Clustered Flow Cytometry Data}
 \usage{
 models_grouped(
   df,
@@ -12,6 +12,8 @@ models_grouped(
   dfcol_train_validation_other,
   dfcol_outcomes,
   hparam_n_evaluations = 3,
+  counts_proportions = "proportions_per_x",
+  which_elements = c("metaCluster"),
   seed = 42,
   learners_classification = list(mlr3::lrn("classif.ranger", predict_type = "prob",
     predict_sets = c("train", "test"), max.depth = paradox::to_tune(2, 20), num.trees =
@@ -22,34 +24,49 @@ models_grouped(
 )
 }
 \arguments{
-\item{df}{A data frame containing feature columns used for classification.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
-\item{outdir}{A character string specifying the output directory to save model results.}
+\item{outdir}{A character string specifying the output directory for model results.}
 
-\item{result_grouping}{A list object containing grouping results, including phenotype proportions.}
+\item{result_grouping}{A list containing precomputed grouping results (e.g., from FlowSOM clustering),
+typically the \code{applied} result from \code{fun_grouped_apply()}.
+Each element is merged with \code{df} based on the grouping variables and the list
+is then given to \code{cytobench::wrapper_count_models}.
+\code{cytobench::wrapper_count_models()} then trains models for each element and
+returns a SINGLE model based on ONE of the elements - the one performing best on
+the validation set.}
 
 \item{grouping}{A data frame that defines grouping variables for merging with \code{df}.}
 
-\item{dfcol_train_validation_other}{Character vector of column names indicating data split (e.g., train/validation/test).}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{dfcol_outcomes}{Character vector of outcome column names to be modeled.}
+\item{dfcol_outcomes}{Character vector of outcome column names to model (e.g., \code{c("outcome_1", "outcome_2")}).}
 
 \item{hparam_n_evaluations}{Integer; number of hyperparameter evaluations during model tuning. Default is 3.}
 
-\item{seed}{Integer; seed for reproducibility. Default is 42.}
+\item{counts_proportions}{Character; either "counts" or "proportions". Determines whether to use raw counts or proportions for clustering.}
 
-\item{learners_classification}{A list of mlr3 learners with tuning parameters set. Default includes a tuned \code{classif.ranger}.}
+\item{which_elements}{Character vector; specifies which elements of the clustering results to use.
+Defaults to \code{c("metaCluster")}, could usually be "cluster".}
 
-\item{dv_class_positive}{A named vector specifying the positive class for each outcome variable.}
+\item{seed}{Integer; random seed for reproducibility. Default is 42.}
 
-\item{loss_measure}{An \code{mlr3} measure object for model evaluation. Default is classification log-loss.}
+\item{learners_classification}{A named list of \link[mlr3:Learner]{mlr3::Learner} objects with hyperparameter ranges defined.
+Defaults to a tuned random forest (\code{classif.ranger}).}
+
+\item{dv_class_positive}{Named vector specifying the positive class for each outcome.
+This ensures consistent performance evaluation for binary classification tasks.}
+
+\item{loss_measure}{An \code{mlr3} measure object to evaluate model performance. Default is classification log-loss.}
 
 \item{...}{Additional arguments passed to \code{cytobench::wrapper_count_models}.}
 }
 \value{
-A list of trained models and evaluation results.
+A list of trained models and associated evaluation metadata, as returned by \code{cytobench::wrapper_count_models}.
 }
 \description{
-This function applies classification models to flow cytometry data grouped by metadata.
-It handles preprocessing, joins with grouping information, and fits models using \code{cytobench::wrapper_count_models}.
+This function trains classification models on clustered flow cytometry data grouped by metadata.
+The grouping information is used to join phenotypic proportions (from FlowSOM results) to
+the feature data, which is then passed to \code{cytobench::wrapper_count_models} for model training.
 }

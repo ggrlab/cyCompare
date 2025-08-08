@@ -23,44 +23,50 @@ fun_grouped(
 )
 }
 \arguments{
-\item{data}{The data which should be subset. E.g.
-\itemize{
-\item A named list of flowFrames, indexed by the "File" column of df.
-}}
+\item{data}{The data which should be subset.
+A named list of flowFrames (or similar), with names matching entries in \code{df$File}.}
 
-\item{make_flowset}{Logical; if TRUE, convert subset to a flowSet before applying the function.}
+\item{make_flowset}{Logical; if \code{TRUE}, convert the subset to a \code{flowSet} before calling \code{fun}.}
 
-\item{fun}{Function to apply on each group. Default: \code{flowsom_repeatsubsampling}.
-The function should accept a flowSet and an output directory as first two arguments.}
+\item{fun}{Function to apply to each group. It must accept a subset of the data and an \code{outdir} as its first two arguments.}
 
-\item{df}{Data frame containing all following \code{dfcol_XXX} and \code{File} column.}
+\item{df}{A \code{data.table} containing sample metadata. Must include columns specified by \verb{dfcol_*}
+and a unique \code{File} column linking to \code{names(flowframes)}..}
 
-\item{dfcol_grouping_supersamples}{Character; column name(s) for supersample grouping.}
+\item{dfcol_grouping_supersamples}{Column(s) in \code{df} used to define supersample groupings (e.g., \code{"Study"}).
+A supersample collects samples of same origin: A study collects samples from
+multiple donors/patients, a patient might be in multiple times.}
 
-\item{dfcol_grouping_samples}{Character; column name(s) for sample grouping.}
+\item{dfcol_grouping_samples}{Column in \code{df} that defines sample-level grouping (e.g., \code{"Device"}).
+Each final biologically different sample could be measured with a different technology,
+cytometer, or lab but SHOULD have the same values.}
 
-\item{dfcol_train_validation_other}{Character; column name to distinguish training/validation/other.}
+\item{dfcol_train_validation_other}{Column indicating sample usage role: \code{"train"}, \code{"test"}, etc.}
 
-\item{dfcol_othergroups}{Character vector (optional); other metadata columns for grouping.}
+\item{dfcol_othergroups}{Optional character vector of additional grouping columns.}
 
-\item{outdir_base}{Character (optional); base directory for writing outputs. The output directory for each group will be
-created by combining \code{outdir_base} with the grouping names. E.g.
-\code{outdir_base/columnA.valueA___columnB.valueB}.}
+\item{outdir_base}{Optional character path; used as the root directory for saving results.
+Each group will have a subdirectory named like \verb{columnA.valueA___columnB.valueB/}.}
 
-\item{verbose}{Logical; print progress messages.}
+\item{verbose}{Logical; print progress messages (default: \code{FALSE}).}
+
+\item{return_results}{Logical; whether to return the result of \code{fun()} for each group. If \code{FALSE},
+assumes \code{fun()} is expected to save results to disk into \code{outdir_base}.}
+
+\item{subset_fun}{Function to extract a subset from \code{data} given a vector of \code{File} names. Defaults to indexing \code{data[files]}.}
 
 \item{...}{Additional arguments passed to \code{fun}.}
 }
 \value{
-A list with two elements:
+A named list with:
 \describe{
-\item{results}{List of outputs returned by \code{fun} for each group.}
-\item{groups}{Data frame of the grouping combinations used.}
+\item{results}{List of outputs from \code{fun()} per group (or \code{NULL} if \code{return_results = FALSE}).}
+\item{groups}{Data frame containing one row per grouping combination used.}
 }
 }
 \description{
-This function applies a specified analysis function (e.g., FlowSOM training)
-to subsets of flow cytometry data defined by unique combinations of df columns.
-Each grouping results in a separate function call, which can be useful
-for training models per sample, supersample, or condition.
+Applies a user-specified function to grouped subsets of flow cytometry data.
+Groupings are defined by combinations of metadata columns in \code{df}, such as study or device.
+Each group's subset is passed to \code{fun()} (e.g., FlowSOM training) independently,
+allowing per-device or per-supersample processing.
 }

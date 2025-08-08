@@ -16,26 +16,61 @@ plot_densities(
 )
 }
 \arguments{
-\item{ff_gated}{A list of \code{flowFrame} objects containing gated flow cytometry data.}
+\item{ff_gated}{Named list of \code{flowFrame} objects, each representing gated flow cytometry data for one sample.
+Names must correspond to entries in \code{df$File}. Can be a flowset or a named list of flowFrames.}
 
-\item{df}{A \code{data.table} containing metadata with at least the columns \code{"File"}, \code{"Device"}, and \code{"Sample"}.}
+\item{df}{A \code{data.table} containing metadata for samples. Must include \code{"File"}, \code{dfcol_grouping_samples}, and \code{"Sample"} columns.}
 
-\item{device_colors}{An optional named vector of colors for each device to use in the plot.}
+\item{device_colors}{Optional named vector of colors for each device (e.g., \code{c("Fortessa" = "blue", "Aurora" = "red")}).}
 
-\item{transformlist}{A list of transformation functions for each marker. If a single function is provided, it will be applied to all markers.}
+\item{transformlist}{Either a single transformation function or a named list of functions, one per marker.
+If NULL, no transformation is applied.}
 
-\item{density_n}{An integer specifying the number of points used to estimate density (default: 500).}
+\item{density_n}{Integer; number of points for kernel density estimation (default: 500).}
 
-\item{relevant_columns}{A character vector of marker names to include in the density plots. If \code{NULL}, all markers will be included.}
+\item{dfcol_grouping_samples}{Column name (character) in \code{df} used for device/sample grouping (default: \code{"Device"}).}
 
-\item{limit_density_quantile}{A numeric value between 0 and 1 to limit the density to a certain quantile within each variable.
-If \code{NA}, no limit is applied and all densities are shown to their full extent. Use
-if one device shows an extreme density peak that is not representative of the other devices
-and thus deforms the density plot. 0.95 is a good value to start with.}
+\item{relevant_columns}{Character vector of markers to include in the plot. If NULL, all markers are included.}
+
+\item{limit_density_quantile}{Numeric between 0 and 1; limits plotted densities to a quantile threshold (e.g., 0.95).
+Useful to suppress extreme density peaks which make all other densities barely visible.
+Set to \code{NA} to disable.}
 }
 \value{
-A \code{ggplot2} object showing the density distributions of markers across samples and devices.
+A \code{ggplot2} object showing density curves across markers, devices, and samples.
 }
 \description{
 This function generates density plots for multiple flow cytometry markers across different devices and samples.
+It applies optional transformations, merges metadata, and creates a faceted plot of density curves.
+}
+\details{
+Every (unique!) flowframe must have a unique name present in \code{df$File}, which will be
+matched to the \code{"Sample"} column. One sample would often (not necessarily!)
+correspond to multiple flowframes, e.g., if multiple files were acquired
+for the same sample on multiple devices.
+}
+\examples{
+fs <- cytobench::simulate_fs(n_samples = 3, ncells = 250, columns = c("CD4", "CD8"))
+
+# Metadata
+df_meta <- data.table::data.table(
+    File = flowCore::sampleNames(fs),
+    Device = c("A", "B", "A"),
+    Sample = c("S1", "S2", "S2")
+)
+
+# Colors for devices
+device_cols <- c("A" = "steelblue", "B" = "firebrick")
+
+# Apply density plot function
+plot <- plot_densities(
+    ff_gated = fs,
+    df = df_meta,
+    device_colors = device_cols,
+    transformlist = function(x) asinh(x / 1000),
+    relevant_columns = c("CD4", "CD8")
+)
+
+# Show plot
+print(plot)
 }

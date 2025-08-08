@@ -13,3 +13,11 @@
 #' @importFrom data.table data.table
 ## usethis namespace: end
 NULL
+
+
+.onLoad <- function(libname, pkgname) {
+    # Load namespace quietly; triggers mlr3learners::.onLoad() -> registers learners
+    if (!requireNamespace("mlr3learners", quietly = TRUE)) {
+        # nothing else needed; mlr3learners::.onLoad() handles the registration
+    }
+}

@@ -4,9 +4,9 @@
 \name{cyCompare-package}
 \alias{cyCompare}
 \alias{cyCompare-package}
-\title{cyCompare: What the Package Does (One Line, Title Case)}
+\title{cyCompare: Comparison and Evaluation of Flow Cytometry Normalization and Analysis Methods}
 \description{
-What the package does (one paragraph).
+Provides tools to benchmark, compare, and visualize flow cytometry normalization and alignment methods across devices, locations, and time points. Implements a simplified optimal transport distance (OTD) to quantify device and sample variability, integrates FlowSOM clustering for population-level analysis, and supports Bland-Altman plots for device agreement. Designed for multi-center studies, with utilities for automated preprocessing and standardized output generation.
 }
 \seealso{
 Useful links:

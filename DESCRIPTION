@@ -1,14 +1,11 @@
 Package: cyCompare
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.1.006
+Title: Comparison and Evaluation of Flow Cytometry Normalization and Analysis Methods
+Version: 0.0.1.007
 Authors@R: 
     person("Gunther", "Glehr", , "gunthergl@gmx.net", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1495-9162"))
-Description: What the package does (one paragraph).
+Description: Provides tools to benchmark, compare, and visualize flow cytometry normalization and alignment methods across devices, locations, and time points. Implements a simplified optimal transport distance (OTD) to quantify device and sample variability, integrates FlowSOM clustering for population-level analysis, and supports Bland-Altman plots for device agreement. Designed for multi-center studies, with utilities for automated preprocessing and standardized output generation.
 License: MIT + file LICENSE
-Suggests: 
-    future.apply,
-    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -23,4 +20,24 @@ Imports:
     flowCore,
     flowWorkspace,
     ggfortify,
-    RColorBrewer
+    RColorBrewer, 
+    cytobench,
+    caret,
+    ggh4x, 
+    ggplot2, 
+    ggpubr, 
+    glmnet, 
+    mlr3,
+    mlr3measures, 
+    paradox, 
+    pROC, 
+    psych, 
+    qs, 
+    rlang, 
+    tibble, 
+    tidyr
+Suggests: 
+    future.apply,
+    testthat (>= 3.0.0),
+    mlr3learners
+Config/Needs/website: rmarkdown
