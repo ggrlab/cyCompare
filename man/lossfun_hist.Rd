@@ -4,7 +4,14 @@
 \alias{lossfun_hist}
 \title{Compute Histogram-Based Distance Between Two Matrices}
 \usage{
-lossfun_hist(mat1, mat2, n_breaks = 100, lossfun = lossfun_hist_weighted, ...)
+lossfun_hist(
+  mat1,
+  mat2,
+  n_breaks = 100,
+  lossfun = lossfun_hist_weighted,
+  quantilebreaks = FALSE,
+  ...
+)
 }
 \arguments{
 \item{mat1}{A numeric matrix. Each column represents a variable (e.g., marker) and rows are observations (e.g., cells).}
@@ -27,6 +34,13 @@ then computes a distance (e.g., Earth Mover's Distance) between the histogrammed
 \code{lossfun}. It is useful for comparing sample distributions.
 }
 \details{
+See also \code{\link{lossfun_hist_columnwise}} for a column-wise variant. Here, the loss
+uses emdist::emd2d() to compute the distance between the two binned matrices jointly,
+understanding each matrix as a 2D distribution over the grid defined by the columns and bins.
+
+This makes only sense if the columns are somewhat related, if you cannot directly compare
+the columns of the two matrices, I \emph{think} that \code{lossfun_hist_columnwise()} is more useful.
+
 Each matrix is converted into a set of histograms (one per column) using globally shared bin breaks.
 lossfun is then computed between the two matrices by applying \code{lossfun()} to the binned data.
 }

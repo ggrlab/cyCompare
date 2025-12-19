@@ -4,6 +4,13 @@
 #' then computes a distance (e.g., Earth Mover's Distance) between the histogrammed representations using a supplied
 #' `lossfun`. It is useful for comparing sample distributions.
 #'
+#' See also \code{\link{lossfun_hist_columnwise}} for a column-wise variant. Here, the loss
+#' uses emdist::emd2d() to compute the distance between the two binned matrices jointly,
+#' understanding each matrix as a 2D distribution over the grid defined by the columns and bins.
+#'
+#' This makes only sense if the columns are somewhat related, if you cannot directly compare
+#' the columns of the two matrices, I _think_ that \code{lossfun_hist_columnwise()} is more useful.
+#'
 #' @param mat1
 #' A numeric matrix. Each column represents a variable (e.g., marker) and rows are observations (e.g., cells).
 #' @param mat2
@@ -32,23 +39,55 @@ lossfun_hist <- function(
     mat1,
     mat2,
     n_breaks = 100,
-    lossfun = lossfun_hist_weighted, ...) {
+    lossfun = lossfun_hist_weighted,
+    quantilebreaks = FALSE,
+    ...) {
     if (n_breaks < 3) {
         stop("n_breaks must be at least 3. With 2 breaks (-> min and max), all values are in the same bin.")
     }
 
     # Combine matrices and compute global histogram breaks
     matlist <- list(mat1, mat2)
-    global_breaks <- seq(min(sapply(matlist, min)), max(sapply(matlist, max)), length.out = n_breaks)
-    dist_between_breaks <- global_breaks[2] - global_breaks[1]
+    if (quantilebreaks) {
+        # Note: This breaks at quantiles ACROSS COLUMNS and MATRICES!
+        global_breaks <- quantile(
+            unlist(matlist),
+            probs = seq(0, 1, length.out = n_breaks)
+        )
+        dist_between_breaks <- diff(global_breaks)
+    } else {
+        global_breaks <- seq(min(sapply(matlist, min)), max(sapply(matlist, max)), length.out = n_breaks)
+        dist_between_breaks <- global_breaks[2] - global_breaks[1]
+    }
 
     # Bin each column of each matrix using shared breaks
     broken_histogrammed <- lapply(matlist, function(mat) {
         apply(mat, 2, function(col) {
             # $counts: n integers; for each cell, the number of x[] inside.
-            graphics::hist(col, breaks = global_breaks, plot = FALSE)$counts
+            # graphics::hist(col, breaks = global_breaks, plot = FALSE)$counts
+            graphics::hist(col, breaks = global_breaks, plot = FALSE)$density
         })
     })
+    # graphcs::hist says:
+    #   values \hat f(x_i), as estimated density values. If all(diff(breaks) == 1),
+    # they are the relative frequencies counts/n and in general satisfy \sum_i \hat
+    # f(x_i) (b_{i+1}-b_i) = 1, where b_i = breaks[i].
+
+    # test if the densities actually sum up to 1 using dist_between_breaks
+    if (!all(
+        sapply(broken_histogrammed, function(x) {
+            # Multiply each row (bin) with the bin width and sum over all bins
+            if (length(dist_between_breaks) > 1) {
+                # variable bin widths
+                apply(diag(dist_between_breaks) %*% x, 2, sum)
+            } else {
+                # constant bin width
+                apply(x * dist_between_breaks, 2, sum)
+            }
+        }) - 1 < .Machine$double.eps * 10
+    )) {
+        warning("Histogram densities do not sum to 1. Check if the breaks are set correctly.")
+    }
     # broken_histogrammed is now a list of two matrices which both are
     #   n_breaks X ncol(mat)
     # matrices. Each column represents a histogram of the corresponding column in the input matrix.
@@ -62,6 +101,62 @@ lossfun_hist <- function(
         ydist = dist_between_breaks,
         ...
     ))
+}
+
+#' Wrapper Functions for Histogram-Based Loss Calculation
+#'
+#' In contrast to \code{lossfun_hist()}, which computes the histogram-based loss
+#' across all columns jointly, this function computes the loss column-wise and sums
+#' the results.
+#'
+#' NOTE: I am NOT sure if this is better or worse than \code{lossfun_hist()}.
+#'
+#' @param result_percolumn
+#' Logical (default: FALSE). If TRUE, returns a numeric vector of losses per column
+#'
+#' @inheritParams lossfun_hist
+#' @export
+lossfun_hist_columnwise <- function(
+    mat1,
+    mat2,
+    n_breaks = 100,
+    lossfun = lossfun_hist_weighted,
+    quantilebreaks = FALSE,
+    result_percolumn = FALSE,
+    ...) {
+    if (n_breaks < 3) {
+        stop("n_breaks must be at least 3. With 2 breaks (-> min and max), all values are in the same bin.")
+    }
+    dist_per_column <- sapply(seq_len(ncol(mat1)), function(col_i) {
+        values <- c(mat1[, col_i], mat2[, col_i])
+        if (quantilebreaks) {
+            # Note: This breaks at quantiles ACROSS COLUMNS and MATRICES!
+            breaks <- quantile(
+                values,
+                probs = seq(0, 1, length.out = n_breaks)
+            )
+            dist_between_breaks <- diff(breaks)
+        } else {
+            breaks <- seq(min(values), max(values), length.out = n_breaks)
+            dist_between_breaks <- breaks[2] - breaks[1]
+        }
+
+        # Bin each column of each matrix using shared breaks
+        histogrammed_1 <- matrix(graphics::hist(mat1[, col_i], breaks = breaks, plot = FALSE)$density, ncol = 1)
+        histogrammed_2 <- matrix(graphics::hist(mat2[, col_i], breaks = breaks, plot = FALSE)$density, ncol = 1)
+
+        lossfun(
+            histogrammed_1,
+            histogrammed_2,
+            ydist = dist_between_breaks,
+            ...
+        )
+    })
+    if (result_percolumn) {
+        return(dist_per_column)
+    } else {
+        return(sum(dist_per_column))
+    }
 }
 
 #' Wrapper Functions for Histogram-Based Loss Calculation

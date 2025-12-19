@@ -112,3 +112,61 @@ test_that("EMD n_breaks minimum", {
     )
     testthat::expect_true(TRUE)
 })
+
+test_that("EMD QUANTILE test", {
+    n_dims <- 2
+    n_points <- 1e3 * n_dims
+    datalist_1 <- list(
+        matrix(c(
+            rnorm(n_points / 2, mean = 0),
+            rnorm(n_points / 2, mean = 5)
+        ), ncol = n_dims)
+    )
+    datalist_2 <- list(
+        matrix(c(
+            rnorm(n_points, mean = 0),
+            rnorm(n_points, mean = 5)
+        ), ncol = n_dims)
+    )
+    l1 <- loss_pairwise(
+        datalist_1,
+        datalist_2,
+        loss = lossfun_hist,
+        quantilebreaks = TRUE,
+        verbose = FALSE,
+        should_skip = function(i, j) FALSE
+    )
+    testthat::expect_true(is.numeric(l1[[1]]))
+})
+
+
+test_that("EMD columnwise", {
+    n_dims <- 2
+    n_points <- 1e3 * n_dims
+    datalist_1 <- list(
+        matrix(c(
+            rnorm(n_points / 2, mean = 0),
+            rnorm(n_points / 2, mean = 5)
+        ), ncol = n_dims)
+    )
+    datalist_2 <- list(
+        matrix(c(
+            rnorm(n_points, mean = 0),
+            rnorm(n_points, mean = 5)
+        ), ncol = n_dims)
+    )
+    l1 <- loss_pairwise(
+        datalist_1,
+        datalist_2,
+        loss = lossfun_hist_columnwise,
+        verbose = FALSE,
+        should_skip = function(i, j) FALSE
+    )
+    l1_percol <- lossfun_hist_columnwise(
+        datalist_1[[1]],
+        datalist_2[[1]],
+        result_percolumn = TRUE,
+        verbose = FALSE
+    )
+    testthat::expect_equal(sum(l1_percol), l1[[1]][[1]])
+})
