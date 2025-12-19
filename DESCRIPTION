@@ -1,6 +1,6 @@
 Package: cyCompare
 Title: Comparison and Evaluation of Flow Cytometry Normalization and Analysis Methods
-Version: 0.0.1.008
+Version: 0.0.1.010
 Authors@R: 
     person("Gunther", "Glehr", , "gunthergl@gmx.net", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-1495-9162"))

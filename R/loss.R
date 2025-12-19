@@ -84,7 +84,7 @@ lossfun_hist <- function(
                 # constant bin width
                 apply(x * dist_between_breaks, 2, sum)
             }
-        }) - 1 < .Machine$double.eps * 10
+        }) - 1 < 1e-12
     )) {
         warning("Histogram densities do not sum to 1. Check if the breaks are set correctly.")
     }

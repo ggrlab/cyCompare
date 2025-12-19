@@ -110,7 +110,6 @@ test_that("EMD n_breaks minimum", {
         n_breaks = 3,
         verbose = FALSE
     )
-    testthat::expect_true(TRUE)
 })
 
 test_that("EMD QUANTILE test", {
